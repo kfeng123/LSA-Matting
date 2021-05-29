@@ -6,13 +6,10 @@ import numpy as np
 from torchvision import transforms
 import logging
 
-#from scipy.ndimage import morphology
-
 from PIL import Image
 
 from ..utils import config
 
-#interpolation_list = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC, cv2.INTER_LANCZOS4]
 interpolation_list = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC]
 
 def random_resize(input, size):
@@ -23,38 +20,20 @@ def random_warpAffine(input, rot_mat, size):
     tmp = random.randint(0, len(interpolation_list)-1)
     return cv2.warpAffine(input, rot_mat, size, flags=interpolation_list[tmp])
 
-# old border
-#def myborder(alpha, fg):
-#    h, w = alpha.shape[0], alpha.shape[1]
-#    alpha_pos = (alpha > 10).astype(np.uint8)
-#    for j in range(3):
-#        fg[:,:,j] = fg[:,:,j] * alpha_pos
-#    fg_new = cv2.blur(fg, (5, 5))
-#    for j in range(3):
-#        fg[:,:,j] = fg_new[:,:,j] * (1-alpha_pos) + fg[:,:,j] * alpha_pos
-#    alpha_pos_blur = cv2.blur(alpha_pos * 255, (5,5)) / 255.
-#    adjust_weight = (alpha_pos_blur * (alpha_pos_blur > 0) * (alpha_pos_blur < 1) + (alpha_pos_blur == 0) + (alpha_pos_blur  == 1))
-#    for j in range(3):
-#        tmp = np.clip( fg[:,:,j].astype(np.int) / adjust_weight, 0, 255).astype(np.uint8)
-#        fg[:,:,j] = fg[:,:,j] * (alpha_pos == 1) + tmp * (alpha_pos == 0)
-#
-#    return fg
-
 def myborder(alpha, fg):
     h, w = alpha.shape[0], alpha.shape[1]
     fg_copy = fg.copy()
     alpha_float = alpha / 255.
     for j in range(3):
         fg[:,:,j] = (fg[:,:,j] * alpha_float) #.astype(np.uint8)
-    fg_new = cv2.blur(fg, (7, 7))
+    fg_new = cv2.blur(fg, (15, 15))
 
-    alpha_pos_blur = cv2.blur(alpha / 255., (7, 7))
+    alpha_pos_blur = cv2.blur(alpha / 255., (15, 15))
     adjust_weight = alpha_pos_blur * (alpha_pos_blur > 1e-5) * (alpha_pos_blur < 1 - 1e-5) + (alpha_pos_blur <= 1e-5) + (alpha_pos_blur  >= 1 - 1e-5)
     for j in range(3):
         tmp = np.clip( fg_new[:,:,j] / adjust_weight, 0, 255).astype(np.uint8)
         fg_new[:,:,j] = tmp
 
-    #alpha_pos = (alpha > 10).astype(np.uint8)
     final_weight = alpha_float
     for j in range(3):
         fg[:,:,j] = fg_new[:,:,j] * (1 - final_weight) + fg_copy[:,:,j] * (alpha_pos_blur > 1e-5) * final_weight
@@ -147,36 +126,6 @@ def generate_Urysohn_func(trimap):
     my_trimap = (my_trimap + 1.) / 3.
     return my_trimap * 255.
 
-#def generate_Urysohn_func(trimap):
-#    h, w = trimap.shape[0], trimap.shape[1]
-#    trimap_fg = (trimap > 200).astype(np.uint8)
-#    trimap_bg = (trimap < 50).astype(np.uint8)
-#    trimap_unknown = 1 - trimap_fg - trimap_bg
-#
-#    trimap_fg_laplacian = cv2.Laplacian(trimap_fg, cv2.CV_8U)
-#    trimap_fg_laplacian = np.clip(trimap_fg_laplacian, 0, 1)
-#
-#    trimap_bg_laplacian = cv2.Laplacian(trimap_bg, cv2.CV_8U)
-#    trimap_bg_laplacian = np.clip(trimap_bg_laplacian, 0, 1)
-#
-#    nonzero_fg = np.count_nonzero(trimap_fg)
-#    nonzero_bg = np.count_nonzero(trimap_bg)
-#
-#    if nonzero_fg == 0 and nonzero_bg == 0:
-#        my_trimap = np.ones((h, w)) * 0.5
-#    elif nonzero_fg > 0 and nonzero_bg == 0:
-#        my_trimap = np.ones((h, w)) * 0.5
-#    elif nonzero_fg == 0 and nonzero_bg > 0:
-#        my_trimap = np.ones((h, w)) * 0.5
-#    elif nonzero_fg > 0 and nonzero_bg > 0:
-#        trimap_fg_dt = cv2.distanceTransform(1-trimap_fg_laplacian, cv2.DIST_L2, 0).astype(np.float)
-#        trimap_bg_dt = cv2.distanceTransform(1-trimap_bg_laplacian, cv2.DIST_L2, 0).astype(np.float)
-#        my_trimap = trimap_bg_dt / (trimap_fg_dt + trimap_bg_dt + 1e-6)
-#
-#    my_trimap = 1 * trimap_fg + my_trimap * trimap_unknown
-#    return my_trimap * 255.
-
-
 def original_trimap(alpha):
     out = {}
 
@@ -189,15 +138,11 @@ def original_trimap(alpha):
         optimal_trimap[unknown>0] = 128
         out['optimal_trimap_Urysohn'] = generate_Urysohn_func(optimal_trimap)
 
-    #unknown = morphology.distance_transform_edt(unknown==0) <= np.random.randint(1, 21)
     distanceTrans = cv2.distanceTransform(1-unknown, cv2.DIST_L2, 0)
     unknown =  np.logical_or(np.logical_and(distanceTrans <= np.random.randint(0, 25), fg < 1),\
                 np.logical_and(distanceTrans <= np.random.randint(0, 25), fg > 0) )
     trimap = fg * 255
     trimap[unknown] = 128
-
-    #if random.random() < 0.5:
-    #    trimap = cv2.medianBlur(trimap, random.choice([3,5,7]))
 
     out['trimap'] = trimap.astype(np.uint8)
 
@@ -213,17 +158,6 @@ def original_trimap(alpha):
         out['trimap_Urysohn'] = generate_Urysohn_func(trimap)
 
     return out
-    #if random.random() < 0.5:
-    #    return trimap.astype(np.uint8)
-    ## random erase
-    #kernel_size = 101
-    #half_size = kernel_size //2
-    #h, w = alpha.shape
-    #for i in range(3):
-    #    ch = np.random.randint(half_size, h - half_size)
-    #    cw = np.random.randint(half_size, w - half_size)
-    #    trimap[(ch-half_size):(ch+half_size+1), (cw-half_size):(cw+half_size+1)] = 128
-    #return trimap.astype(np.uint8)
 
 class random_rotation:
     def __init__(self):
@@ -256,9 +190,6 @@ class random_rotation:
 
         return alpha, fg, bg
 
-# standard gamma augmentation
-#def gamma_aug(img, gamma):
-#    return ( 255. * pow(img/255., gamma) ).clip(0, 255).astype(np.uint8)
 # new gamma augmentation
 def gamma_aug(img, gamma):
     if random.random() < 0.5:
@@ -268,7 +199,6 @@ def gamma_aug(img, gamma):
 
 def random_crop(alpha, fg, bg, crop_h, crop_w):
     h, w = alpha.shape
-    #target = np.where((alpha > 0) & (alpha < 255))
     unknown = (alpha > 0) & (alpha < 255)
     target = np.where(alpha > 0)
     delta_h = int(crop_h/2)
@@ -356,7 +286,6 @@ class MatDataset(torch.utils.data.Dataset):
         self.logger.info("Matting Dataset foreground number: {}".format(self.cnt))
 
         self.random_rotation = random_rotation()
-        #self.ColorJitter = transforms.ColorJitter(brightness = 0.2, contrast = 0.2, saturation = 0.2, hue = 0.2)
         self.ColorJitter = transforms.ColorJitter(brightness = 0.4, contrast = 0.4, saturation = 0.4)
         self.ToTensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean = config.mean, std = config.std)
@@ -378,10 +307,6 @@ class MatDataset(torch.utils.data.Dataset):
         bg = cv2.imread(image_bg_path)[:, :, :3]
 
         fg = myborder(alpha, fg)
-
-        # median blur for alpha
-        #if random.random() < 0.5:
-        #    alpha = cv2.medianBlur(alpha, random.choice([3,5,7]))
 
         bh, bw, bc, = fg.shape
         if self.train_size_h > bh:
@@ -533,15 +458,8 @@ class MatDataset(torch.utils.data.Dataset):
         if config.aux_loss_Urysohn:
             optimal_trimap_Urysohn = torch.from_numpy(trimap_dict['optimal_trimap_Urysohn'])[None,:,:].float()
 
-        #img_rgb = fg_norm.clone().detach()
-        #for i in range(3):
-        #    img_rgb[i,:,:] = fg_norm[i,:,:] * alpha/255. + bg_norm[i,:,:] * (1- alpha/255.)
-
         fg_norm = self.normalize(fg_norm)
         bg_norm = self.normalize(bg_norm)
-        #img_norm = fg_norm * alpha/255. + bg_norm * (1- alpha/255.)
-
-        #img_norm = self.normalize(img_rgb)
 
         if config.aux_loss_Urysohn:
             return fg_norm, bg_norm, alpha, trimap, optimal_trimap_Urysohn, img_info
