@@ -28,7 +28,6 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
 
         self.withReLU = withReLU
-
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -99,8 +98,6 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
-    #def __init__(self, block, layers, num_classes=1000):
     def __init__(self, block, layers, inChannel = 4):
         self.inplanes = 128
         super(ResNet, self).__init__()
@@ -119,8 +116,6 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
-        #self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -175,10 +170,6 @@ class ResNet(nn.Module):
         x = self.relu3(x)
         x = self.layer4(x)
         outputs['stage5'] = x
-
-        #x = self.avgpool(x)
-        #x = x.view(x.size(0), -1)
-        #x = self.fc(x)
 
         return outputs
 

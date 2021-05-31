@@ -10,7 +10,6 @@ import torch.nn.functional as F
 import numpy as np
 import time
 
-from matting.data.data_online_official import generate_trimap_edt, generate_BPD, generate_Urysohn_func
 import matting.utils.config as config
 from matting.utils.utils import get_logger
 from matting.models.model import theModel
@@ -19,7 +18,6 @@ from matting.inference import inference_rotation_multiscale
 def get_args():
     parser = argparse.ArgumentParser(description='DeepImageMatting')
     parser.add_argument('--resume', type=str, required=True, help="checkpoint that model resume from")
-    #parser.add_argument('--testResDir', type=str, required=True, help="where prediction result save to")
     args = parser.parse_args()
     print(args)
     return args

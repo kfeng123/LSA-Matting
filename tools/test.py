@@ -10,7 +10,6 @@ import torch.nn.functional as F
 import numpy as np
 import time
 
-from matting.data.data_online_official import generate_trimap_edt, generate_BPD, generate_Urysohn_func
 import matting.utils.config as config
 from matting.utils.utils import get_logger
 from matting.models.model import theModel
@@ -73,11 +72,7 @@ def test(args, model, logger, saveImg = False):
 
     mse_diffs = 0.
     sad_diffs = 0.
-    #cur = 0
-    #t0 = time.time()
     for img_id in img_ids:
-        #if img_id[-4:] != ".png":
-        #    continue
         img_path = os.path.join(config.test_img_path, img_id)
         trimap_path = os.path.join(config.test_trimap_path, img_id)
 
@@ -91,14 +86,11 @@ def test(args, model, logger, saveImg = False):
 
         img_info = (img_path.split('/')[-1], img.shape[0], img.shape[1])
 
-        #cur += 1
-        #logger.info('[{}/{}] {}'.format(cur, cnt, img_info[0]))
-
         with torch.no_grad():
             torch.cuda.empty_cache()
             origin_pred_mattes = inference_aug(model, img, trimap)
 
-        # only attention unknown region
+        # only care about the unknown region
         origin_pred_mattes[trimap == 255] = 1.
         origin_pred_mattes[trimap == 0  ] = 0.
 
@@ -125,7 +117,6 @@ def test(args, model, logger, saveImg = False):
             unique_ids_sad[tmp] += sad_diff
             mse_diffs += mse_diff
             sad_diffs += sad_diff
-            #logger.info("sad:{} mse:{}".format(sad_diff, mse_diff))
 
         origin_pred_mattes = (origin_pred_mattes * 255).astype(np.uint8)
 
@@ -134,12 +125,11 @@ def test(args, model, logger, saveImg = False):
                 os.makedirs(args.testResDir)
             cv2.imwrite(os.path.join(args.testResDir, img_info[0]), origin_pred_mattes)
 
-    #logger.info("Avg-Cost: {} s/image".format((time.time() - t0) / cnt))
     if config.test_alpha_path != '':
         for ids in unique_ids:
             unique_ids_mse[ids] /= unique_ids[ids]
             unique_ids_sad[ids] /= unique_ids[ids]
-            logger.info(" {}: Eval-MSE: {} Eval-SAD: {}".format(ids, unique_ids_mse[ids], unique_ids_sad[ids]))
+            #logger.info(" {}: Eval-MSE: {} Eval-SAD: {}".format(ids, unique_ids_mse[ids], unique_ids_sad[ids]))
         logger.info("Eval-MSE: {}".format(mse_diffs / cnt))
         logger.info("Eval-SAD: {}".format(sad_diffs / cnt))
     return sad_diffs / cnt

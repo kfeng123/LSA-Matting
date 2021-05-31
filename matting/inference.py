@@ -9,7 +9,6 @@ import torch.nn.functional as F
 import numpy as np
 import time
 
-from .data.data_online_official import generate_trimap_edt, generate_BPD, generate_Urysohn_func
 from .utils import config
 from .models.model import theModel
 
@@ -49,25 +48,6 @@ def inference(model, img, trimap):
     tensor_img = normalize(img_rgb).unsqueeze(0)
     tensor_trimap = torch.from_numpy(trimap.astype(np.float32)[np.newaxis, np.newaxis, :, :])
 
-    if config.trimap_edt:
-        fg = np.array((trimap>200).astype(np.uint8))
-        fg_wide = np.array((trimap> 50).astype(np.uint8))
-        trimap_edt = generate_trimap_edt(fg, fg_wide)
-        tensor_trimap_edt = torch.from_numpy(trimap_edt).permute(2,0,1)[None, :, :, :].float()
-        tensor_trimap = torch.cat([tensor_trimap, tensor_trimap_edt], 1)
-
-    if config.trimap_BPD:
-        fg = np.array((trimap>200).astype(np.uint8))
-        fg_wide = np.array((trimap> 50).astype(np.uint8))
-        trimap_BPD = np.concatenate( ( generate_BPD(fg),  generate_BPD(fg_wide) ), axis = 2)
-        tensor_trimap_BPD = torch.from_numpy(trimap_BPD).permute(2,0,1)[None, :, :, :].float()
-        tensor_trimap = torch.cat([tensor_trimap, tensor_trimap_BPD], 1)
-
-    if config.trimap_Urysohn:
-        trimap_Urysohn = generate_Urysohn_func(trimap)
-        tensor_trimap_Urysohn = torch.from_numpy(trimap_Urysohn)[None, None, :, :].float()
-        tensor_trimap = torch.cat([tensor_trimap, tensor_trimap_Urysohn], 1)
-
     if config.cuda:
         tensor_img = tensor_img.cuda()
         tensor_trimap = tensor_trimap.cuda()
@@ -100,14 +80,12 @@ def inference_aug(model, img, trimap):
         # resize for network input, to Tensor
         scale_img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
         scale_trimap = cv2.resize(trimap, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
-        #print("Original shape is ", (h,w), ". Resize to ", (new_h, new_w))
         ifResize = True
     else:
         new_h = h
         new_w = w
         scale_img = img.copy()
         scale_trimap = trimap.copy()
-        #print("Image size is ", (new_h, new_w))
         ifResize = False
 
     pred_mattes = inference(model, scale_img, scale_trimap)
@@ -129,14 +107,12 @@ def inference_rotation(model, img, trimap):
         # resize for network input, to Tensor
         scale_img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
         scale_trimap = cv2.resize(trimap, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
-        #print("Original shape is ", (h,w), ". Resize to ", (new_h, new_w))
         ifResize = True
     else:
         new_h = h
         new_w = w
         scale_img = img.copy()
         scale_trimap = trimap.copy()
-        #print("Image size is ", (new_h, new_w))
         ifResize = False
 
     all_preds = []

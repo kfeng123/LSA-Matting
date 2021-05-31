@@ -39,104 +39,12 @@ def myborder(alpha, fg):
         fg[:,:,j] = fg_new[:,:,j] * (1 - final_weight) + fg_copy[:,:,j] * (alpha_pos_blur > 1e-5) * final_weight
     return fg
 
-def generate_trimap_edt(fg, fg_wide):
-    h, w = fg.shape[0], fg.shape[1]
-    clicks = np.zeros((h,w,6))
-    if(np.count_nonzero(fg) > 0):
-        dt_mask = -cv2.distanceTransform(1 - fg, cv2.DIST_L2, 0)**2
-        L = 320
-        clicks[:, :, 0] = np.exp(dt_mask / (2 * ((0.02 * L)**2)))
-        clicks[:, :, 1] = np.exp(dt_mask / (2 * ((0.08 * L)**2)))
-        clicks[:, :, 2] = np.exp(dt_mask / (2 * ((0.16 * L)**2)))
-    if(np.count_nonzero(fg_wide) > 0):
-        dt_mask = -cv2.distanceTransform(1 - fg_wide, cv2.DIST_L2, 0)**2
-        L = 320
-        clicks[:, :, 3] = np.exp(dt_mask / (2 * ((0.02 * L)**2)))
-        clicks[:, :, 4] = np.exp(dt_mask / (2 * ((0.08 * L)**2)))
-        clicks[:, :, 5] = np.exp(dt_mask / (2 * ((0.16 * L)**2)))
-
-    return clicks * 255
-
-# take in a binary mask (np.uint8), output the Boundary-to-Pixel Direction as defined in the CVPR 2020 paper:
-# Super-BPD: Super Boundary-to-Pixel Direction for Fast Image Segmentation
-def generate_BPD(mask):
-    h, w = mask.shape[0], mask.shape[1]
-    BPD = np.zeros((h, w, 2))
-    if(np.count_nonzero(mask) > 0):
-        if(mask.dtype != np.uint8):
-            mask = mask.astype(np.uint8)
-        mask_laplacian = cv2.Laplacian(1 - mask, cv2.CV_8U)
-        mask_laplacian = np.clip(mask_laplacian, 0, 1)
-        mask_laplacian_dt = cv2.distanceTransform(1- mask_laplacian, cv2.DIST_L2, 0)
-        BPD[:,:,0] = cv2.Sobel(mask_laplacian_dt, cv2.CV_32F, 1, 0, ksize = 1)
-        BPD[:,:,1] = cv2.Sobel(mask_laplacian_dt, cv2.CV_32F, 0, 1, ksize = 1)
-        tmp = np.sqrt( BPD[:,:,0] ** 2 + BPD[:,:,1] ** 2 + 1e-6 )
-        BPD[:,:,0] = BPD[:,:,0] / tmp
-        BPD[:,:,1] = BPD[:,:,1] / tmp
-        #BPD[:,:,0] = BPD[:,:,0] - 2 * BPD[:,:,0] * (mask > 0)
-        #BPD[:,:,1] = BPD[:,:,1] - 2 * BPD[:,:,1] * (mask > 0)
-    return BPD * 255
-
-# take in a trimap (np.uint8), output the gradient of the SDF
-#def generate_SDF_grad(trimap):
-#    h, w = trimap.shape[0], trimap.shape[1]
-#    SDF_grad = np.zeros((h, w, 2))
-#    if(np.count_nonzero(mask) > 0):
-#        if(mask.dtype != np.uint8):
-#            mask = mask.astype(np.uint8)
-#        mask_laplacian = cv2.Laplacian(1 - mask, cv2.CV_8U)
-#        mask_laplacian = np.clip(mask_laplacian, 0, 1)
-#        mask_laplacian_dt = cv2.distanceTransform(1- mask_laplacian, cv2.DIST_L2, 0)
-#        BPD[:,:,0] = cv2.Sobel(mask_laplacian_dt, cv2.CV_32F, 1, 0, ksize = 1)
-#        BPD[:,:,1] = cv2.Sobel(mask_laplacian_dt, cv2.CV_32F, 0, 1, ksize = 1)
-#        tmp = np.sqrt( BPD[:,:,0] ** 2 + BPD[:,:,1] ** 2 + 1e-6 )
-#        BPD[:,:,0] = BPD[:,:,0] / tmp
-#        BPD[:,:,1] = BPD[:,:,1] / tmp
-#        #BPD[:,:,0] = BPD[:,:,0] - 2 * BPD[:,:,0] * (mask > 0)
-#        #BPD[:,:,1] = BPD[:,:,1] - 2 * BPD[:,:,1] * (mask > 0)
-#    return BPD * 255
-
-def generate_Urysohn_func(trimap):
-    h, w = trimap.shape[0], trimap.shape[1]
-    trimap_fg = (trimap > 200).astype(np.uint8)
-    trimap_bg = (trimap < 50).astype(np.uint8)
-    trimap_unknown = 1 - trimap_fg - trimap_bg
-
-    trimap_fg_laplacian = cv2.Laplacian(trimap_fg, cv2.CV_8U)
-    trimap_fg_laplacian = np.clip(trimap_fg_laplacian, 0, 1)
-
-    trimap_bg_laplacian = cv2.Laplacian(trimap_bg, cv2.CV_8U)
-    trimap_bg_laplacian = np.clip(trimap_bg_laplacian, 0, 1)
-
-    nonzero_fg = np.count_nonzero(trimap_fg)
-    nonzero_bg = np.count_nonzero(trimap_bg)
-
-    if nonzero_fg == 0 and nonzero_bg == 0:
-        my_trimap = np.ones((h, w)) * 0.5
-    elif nonzero_fg > 0 and nonzero_bg == 0:
-        my_trimap = np.ones((h, w)) * 0.5
-    elif nonzero_fg == 0 and nonzero_bg > 0:
-        my_trimap = np.ones((h, w)) * 0.5
-    elif nonzero_fg > 0 and nonzero_bg > 0:
-        trimap_fg_dt = cv2.distanceTransform(1-trimap_fg_laplacian, cv2.DIST_L2, 0).astype(np.float)
-        trimap_bg_dt = cv2.distanceTransform(1-trimap_bg_laplacian, cv2.DIST_L2, 0).astype(np.float)
-        my_trimap = trimap_bg_dt / (trimap_fg_dt + trimap_bg_dt + 1e-6)
-
-    my_trimap = (2-my_trimap) * trimap_fg - my_trimap * trimap_bg + my_trimap * trimap_unknown
-    my_trimap = (my_trimap + 1.) / 3.
-    return my_trimap * 255.
-
 def original_trimap(alpha):
     out = {}
 
     fg = np.equal(alpha, 255).astype(np.uint8)
     fg_wide = np.not_equal(alpha, 0).astype(np.uint8)
     unknown = fg_wide - fg
-
-    if config.aux_loss_Urysohn:
-        optimal_trimap = fg * 255
-        optimal_trimap[unknown>0] = 128
-        out['optimal_trimap_Urysohn'] = generate_Urysohn_func(optimal_trimap)
 
     distanceTrans = cv2.distanceTransform(1-unknown, cv2.DIST_L2, 0)
     unknown =  np.logical_or(np.logical_and(distanceTrans <= np.random.randint(0, 25), fg < 1),\
@@ -145,17 +53,6 @@ def original_trimap(alpha):
     trimap[unknown] = 128
 
     out['trimap'] = trimap.astype(np.uint8)
-
-    if config.trimap_edt:
-        out['trimap_edt'] = generate_trimap_edt((trimap > 200).astype(np.uint8), (trimap > 100).astype(np.uint8))
-
-    if config.trimap_BPD:
-        out['trimap_BPD'] = np.concatenate(
-                ( generate_BPD((trimap > 200).astype(np.uint8)),  generate_BPD((trimap > 100).astype(np.uint8))  ),
-                axis = 2)
-
-    if config.trimap_Urysohn:
-        out['trimap_Urysohn'] = generate_Urysohn_func(trimap)
 
     return out
 
@@ -175,9 +72,7 @@ class random_rotation:
         fg_degree = random.randint(self.degrees[0], self.degrees[1])
         rot_mat = cv2.getRotationMatrix2D((centerw, centerh), fg_degree, 1)
 
-        #alpha = cv2.warpAffine(alpha, rot_mat, (w, h))
         alpha = random_warpAffine(alpha, rot_mat, (w, h))
-        #fg = cv2.warpAffine(fg, rot_mat, (w, h))
         fg = random_warpAffine(fg, rot_mat, (w, h))
 
         # bg
@@ -185,7 +80,6 @@ class random_rotation:
         bg_centerw = w//2 + random.randint(self.center_w_range[0], self.center_w_range[1])
         bg_degree = random.randint(self.degrees[0], self.degrees[1])
         bg_rot_mat = cv2.getRotationMatrix2D((bg_centerw, bg_centerh), bg_degree, 1)
-        #bg = cv2.warpAffine(bg, bg_rot_mat, (w, h))
         bg = random_warpAffine(bg, bg_rot_mat, (w, h))
 
         return alpha, fg, bg
@@ -350,20 +244,6 @@ class MatDataset(torch.utils.data.Dataset):
             fg    =random_resize(fg,     (self.train_size_w, self.train_size_h))
             bg    =random_resize(bg,     (self.train_size_w, self.train_size_h))
 
-        # gamma augmentation
-        if random.random() < 0.0:
-            # gamma is from 0.5 to 2
-            if random.random() < 0.5:
-                fg = gamma_aug(fg, random.random()/2 + 0.5)
-            else:
-                fg = gamma_aug(fg, random.random() + 1.)
-        if random.random() < 0.0:
-            # gamma is from 0.5 to 2
-            if random.random() < 0.5:
-                bg = gamma_aug(bg, random.random()/2 + 0.5)
-            else:
-                bg = gamma_aug(bg, random.random() + 1.)
-
         if random.random() < 0.3:
             # gamma is from 0.5 to 2
             if random.random() < 0.5:
@@ -377,15 +257,6 @@ class MatDataset(torch.utils.data.Dataset):
                 weight = random.random()
                 fg[:,:,i] = fg[:,:,i] * weight + tmp[i] * (1-weight)
 
-        if random.random() < 0:
-            tmp = np.random.rand(4 * 4 * 3) * 255
-            tmp = tmp.reshape((4, 4, 3)) * 255
-            h, w, _ = fg.shape
-            tmp = cv2.resize(tmp, (w, h), interpolation = cv2.INTER_CUBIC)
-            weight = random.random()
-            fg = fg * weight + tmp * (1-weight)
-            fg = fg.astype(np.uint8)
-
         if random.random() < 0.2:
             fg = 255 - fg
         if random.random() < 0.2:
@@ -397,12 +268,6 @@ class MatDataset(torch.utils.data.Dataset):
         #cv2.imwrite("result/debug/debug_{}_fg.png".format(index),fg)
         #cv2.imwrite("result/debug/debug_{}_bg.png".format(index),bg)
         #cv2.imwrite("result/debug/debug_{}_trimap.png".format(index),trimap)
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt0.png".format(index),trimap_dict['trimap_edt'][:,:,0])
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt1.png".format(index),trimap_dict['trimap_edt'][:,:,1])
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt2.png".format(index),trimap_dict['trimap_edt'][:,:,2])
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt3.png".format(index),trimap_dict['trimap_edt'][:,:,3])
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt4.png".format(index),trimap_dict['trimap_edt'][:,:,4])
-        #cv2.imwrite("result/debug/debug_{}_trimap_edt5.png".format(index),trimap_dict['trimap_edt'][:,:,5])
 
         #########
 
@@ -443,26 +308,9 @@ class MatDataset(torch.utils.data.Dataset):
         alpha = torch.from_numpy(alpha.astype(np.float32)[np.newaxis, :, :])
         trimap = torch.from_numpy(trimap.astype(np.float32)[np.newaxis, :, :])
 
-        if config.trimap_edt:
-            trimap_edt = torch.from_numpy(trimap_dict['trimap_edt']).permute(2,0,1).float()
-            trimap = torch.cat([trimap, trimap_edt], 0)
-
-        if config.trimap_BPD:
-            trimap_BPD = torch.from_numpy(trimap_dict['trimap_BPD']).permute(2,0,1).float()
-            trimap = torch.cat([trimap, trimap_BPD], 0)
-
-        if config.trimap_Urysohn:
-            trimap_Urysohn = torch.from_numpy(trimap_dict['trimap_Urysohn'])[None,:,:].float()
-            trimap = torch.cat([trimap, trimap_Urysohn], 0)
-
-        if config.aux_loss_Urysohn:
-            optimal_trimap_Urysohn = torch.from_numpy(trimap_dict['optimal_trimap_Urysohn'])[None,:,:].float()
-
         fg_norm = self.normalize(fg_norm)
         bg_norm = self.normalize(bg_norm)
 
-        if config.aux_loss_Urysohn:
-            return fg_norm, bg_norm, alpha, trimap, optimal_trimap_Urysohn, img_info
 
         return fg_norm, bg_norm, alpha, trimap, img_info
 

@@ -25,6 +25,7 @@ test_trimap_path = os.path.join(test_path_base, "trimaps")
 test_alpha_path = os.path.join(test_path_base, "alpha_copy")
 
 # train
+batchSize = 16
 threads = 20
 saveDir = "model"
 printFreq = 20
@@ -34,12 +35,8 @@ testFreq= 10
 train_size_h = 640
 train_size_w = 640
 
-#crop_size_h = [i for i in range(320, 961)]
-#crop_size_w = [i for i in range(320, 961)]
 crop_size_h = [i for i in range(480, 801)]
 crop_size_w = [i for i in range(480, 801)]
-#crop_size_h = [640]
-#crop_size_w = [640]
 
 # training data loader
 total_fg_list = []
@@ -64,21 +61,8 @@ if train_add_test:
 # test
 max_size = 2176
 
-# model
-aux_loss = False
-aux_loss_Urysohn = False
-
-trimap_edt = False
-trimap_BPD = False
-trimap_Urysohn = False
-
-spatial_propagation = False
-propagation_iteration = 16
-
-spatial_markov = False
-markov_iteration = 16
-
 # optimizer
+nEpochs = 180
 opt_method = "Adam"
-#lr = 2.5e-4
+lr = 5e-5
 weight_decay = 1e-4
