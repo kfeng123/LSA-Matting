@@ -7,6 +7,7 @@ from ..utils import config
 from .backbone.vovnet import VoVNet
 from .backbone.resnet import resnet18, resnet50
 from .backbone.resnet26d import resnet26d
+from .backbone.mmclassification.resnet import ResNetV1d
 from .skip.skip import skipModule_simple
 from .decoder.decoder_FAM import  decoderModule
 
@@ -16,10 +17,11 @@ class theModel(nn.Module):
         self.lastStage = 5
         image_channel = 4
         #self.backbone = VoVNet(image_channel, myArch = "V-39-eSE", lastStage = 5)
-        self.backbone = resnet18(inChannel = image_channel)
+        #self.backbone = resnet18(inChannel = image_channel)
+        self.backbone = resnet18(in_channels = image_channel, depth = 50)
         #self.backbone = resnet26d(inChannel = image_channel)
         self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = True)
-        self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel, aux_loss = config.aux_loss)
+        self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel)
     def forward(self, x):
         encoder_out = self.backbone(x)
         skip_out = self.skip(x, encoder_out)

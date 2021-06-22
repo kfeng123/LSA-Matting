@@ -35,10 +35,9 @@ class FAM_module(nn.Module):
         return output
 
 class decoderModule(nn.Module):
-    def __init__(self, inChannels, lastStage = 4, image_channel = 4, aux_loss = False):
+    def __init__(self, inChannels, lastStage = 4, image_channel = 4):
         super(decoderModule, self).__init__()
         self.lastStage = lastStage
-        self.aux_loss = aux_loss
         self.outChannels ={'stage0': 1,
                 'stage1': 64,
                 'stage2': 64,
@@ -95,7 +94,6 @@ class decoderModule(nn.Module):
         alpha = self.final_fusion(features['stage0'], tmp)
         alpha = self.final_final(alpha)
         out['alpha'] = alpha
-        out['aux_alpha'] = None
 
 
         return out
