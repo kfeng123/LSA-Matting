@@ -18,7 +18,7 @@ class theModel(nn.Module):
         image_channel = 4
         #self.backbone = VoVNet(image_channel, myArch = "V-39-eSE", lastStage = 5)
         #self.backbone = resnet18(inChannel = image_channel)
-        self.backbone = resnet18(in_channels = image_channel, depth = 50)
+        self.backbone = ResNetV1d(in_channels = image_channel, depth = 50)
         #self.backbone = resnet26d(inChannel = image_channel)
         self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = True)
         self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel)

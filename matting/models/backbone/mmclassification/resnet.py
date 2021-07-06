@@ -666,7 +666,7 @@ class ResNetV1d(ResNet):
         self.load_state_dict(model_dict)
         print("#########################################")
         self._out_feature_channels = {
-                "stage1": 128,
+                "stage1": 64,
                 "stage2": 256,
                 "stage3": 512,
                 "stage4": 1024,
