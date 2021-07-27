@@ -33,19 +33,19 @@ printFreq = 20
 ckptSaveFreq = 10
 testFreq= 10
 
-train_size_h = 640
-train_size_w = 640
+train_size_h = 512
+train_size_w = 512
 
-crop_size_h = [i for i in range(480, 801)]
-crop_size_w = [i for i in range(480, 801)]
+crop_size_h = [i for i in range(448, 577)]
+crop_size_w = [i for i in range(448, 577)]
 
 # training data loader
 total_fg_list = []
 total_alpha_list = []
 total_bg_list = []
-for f in os.listdir(fg_path):
+for f in os.listdir(new_fg_path):
     if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
-        total_fg_list.append(os.path.join(fg_path, f))
+        total_fg_list.append(os.path.join(new_fg_path, f))
         total_alpha_list.append(os.path.join(alpha_path, f))
 for f in os.listdir(bg_path):
     if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):

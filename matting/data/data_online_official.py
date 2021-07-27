@@ -200,7 +200,7 @@ class MatDataset(torch.utils.data.Dataset):
         fg = cv2.imread(image_fg_path)[:, :, :3]
         bg = cv2.imread(image_bg_path)[:, :, :3]
 
-        fg = myborder(alpha, fg)
+        # fg = myborder(alpha, fg)
 
         bh, bw, bc, = fg.shape
         if self.train_size_h > bh:
@@ -286,7 +286,7 @@ class MatDataset(torch.utils.data.Dataset):
         ##################################
 
         fg_rgb = Image.fromarray(cv2.cvtColor(fg, cv2.COLOR_BGR2RGB))
-        fg_rgb = self.ColorJitter(fg_rgb)
+        #fg_rgb = self.ColorJitter(fg_rgb)
         fg_norm = self.ToTensor(fg_rgb)
 
         ##################################
@@ -302,7 +302,7 @@ class MatDataset(torch.utils.data.Dataset):
         ##################################
 
         bg_rgb = Image.fromarray(cv2.cvtColor(bg, cv2.COLOR_BGR2RGB))
-        bg_rgb = self.ColorJitter(bg_rgb)
+        #bg_rgb = self.ColorJitter(bg_rgb)
         bg_norm = self.ToTensor(bg_rgb)
 
         alpha = torch.from_numpy(alpha.astype(np.float32)[np.newaxis, :, :])
