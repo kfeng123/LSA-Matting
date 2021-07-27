@@ -1,3 +1,5 @@
+import sys
+import os
 sys.path.insert(0,".")
 import pymatting
 import matting.utils.config as config
