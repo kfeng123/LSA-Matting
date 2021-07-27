@@ -10,6 +10,7 @@ std = [0.229, 0.224, 0.225]
 # train data
 train_path_base = "/sda/WangRui/dataSets/Combined_Dataset/my_clean/train"
 fg_path = os.path.join(train_path_base, "fg")
+new_fg_path = os.path.join(train_path_base, "new_fg")
 bg_path = os.path.join(train_path_base, "coco_bg")
 alpha_path = os.path.join(train_path_base, "alpha")
 

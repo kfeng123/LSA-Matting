@@ -26,9 +26,9 @@ def myborder(alpha, fg):
     alpha_float = alpha / 255.
     for j in range(3):
         fg[:,:,j] = (fg[:,:,j] * alpha_float) #.astype(np.uint8)
-    fg_new = cv2.blur(fg, (10, 10))
+    fg_new = cv2.blur(fg, (9, 9))
 
-    alpha_pos_blur = cv2.blur(alpha / 255., (10, 10))
+    alpha_pos_blur = cv2.blur(alpha / 255., (9, 9))
     adjust_weight = alpha_pos_blur * (alpha_pos_blur > 1e-5) * (alpha_pos_blur < 1 - 1e-5) + (alpha_pos_blur <= 1e-5) + (alpha_pos_blur  >= 1 - 1e-5)
     for j in range(3):
         tmp = np.clip( fg_new[:,:,j] / adjust_weight, 0, 255).astype(np.uint8)
@@ -180,7 +180,7 @@ class MatDataset(torch.utils.data.Dataset):
         self.logger.info("Matting Dataset foreground number: {}".format(self.cnt))
 
         self.random_rotation = random_rotation()
-        self.ColorJitter = transforms.ColorJitter(brightness = 0.4, contrast = 0.4, saturation = 0.4)
+        self.ColorJitter = transforms.ColorJitter(brightness = 0.0, contrast = 0.0, saturation = 0.0)
         self.ToTensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean = config.mean, std = config.std)
 
