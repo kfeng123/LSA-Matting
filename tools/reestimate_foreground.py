@@ -3,6 +3,7 @@ import os
 sys.path.insert(0,".")
 import pymatting
 import matting.utils.config as config
+import numpy as np
 
 #config.fg_path
 #config.new_fg_path
