@@ -15,6 +15,7 @@ for f in os.listdir(config.fg_path):
         img = pymatting.load_image(os.path.join(config.fg_path, f))
         alpha = pymatting.load_image(os.path.join(config.alpha_path, f))
         foreground = pymatting.estimate_foreground_ml(alpha[:,:,np.newaxis]*img, alpha)
+        foreground = (1 - (1-alpha[:,:,np.newaxis])**2 ) * img + (1-alpha[:,:,np.newaxis])**2 * foreground
         pymatting.save_image(os.path.join(config.new_fg_path, f), foreground)
 
 

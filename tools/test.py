@@ -107,7 +107,7 @@ def test(args, model, logger, saveImg = False):
             assert(alpha.shape == origin_pred_mattes.shape)
 
             mse_diff = ((origin_pred_mattes - alpha) ** 2).sum() / pixel
-            sad_diff = np.abs(origin_pred_mattes - alpha).sum()
+            sad_diff = np.abs(origin_pred_mattes - alpha).sum() / 1000.
 
 
             tmp = img_id.split("_")
