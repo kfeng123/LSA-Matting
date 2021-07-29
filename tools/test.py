@@ -39,15 +39,6 @@ def gen_dataset(imgdir, trimapdir):
 
         return sample_set
 
-def compute_gradient(img):
-    x = cv2.Sobel(img, cv2.CV_16S, 1, 0)
-    y = cv2.Sobel(img, cv2.CV_16S, 0, 1)
-    absX = cv2.convertScaleAbs(x)
-    absY = cv2.convertScaleAbs(y)
-    grad = cv2.addWeighted(absX, 0.5, absY, 0.5, 0)
-    grad=cv2.cvtColor(grad, cv2.COLOR_BGR2GRAY)
-    return grad
-
 def test(args, model, logger, saveImg = False):
     model.eval()
     sample_set = []
@@ -72,6 +63,9 @@ def test(args, model, logger, saveImg = False):
 
     mse_diffs = 0.
     sad_diffs = 0.
+    grad_diffs = 0.
+    connect_diffs = 0.
+
     for img_id in img_ids:
         img_path = os.path.join(config.test_img_path, img_id)
         trimap_path = os.path.join(config.test_trimap_path, img_id)
@@ -106,8 +100,12 @@ def test(args, model, logger, saveImg = False):
             alpha = cv2.imread(alpha_name, 0) / 255.
             assert(alpha.shape == origin_pred_mattes.shape)
 
-            mse_diff = ((origin_pred_mattes - alpha) ** 2).sum() / pixel
-            sad_diff = np.abs(origin_pred_mattes - alpha).sum() / 1000.
+            #mse_diff = ((origin_pred_mattes - alpha) ** 2).sum() / pixel
+            #sad_diff = np.abs(origin_pred_mattes - alpha).sum() / 1000.
+            mse_dff = eval_mse(origin_pred_mattes, alpha, trimap)
+            sad_dff = eval_sad(origin_pred_mattes, alpha, trimap)
+            grad_dff = eval_gradient_loss(origin_pred_mattes, alpha, trimap)
+            connect_dff = eval_connectivity_loss(origin_pred_mattes, alpha, trimap)
 
 
             tmp = img_id.split("_")
@@ -117,6 +115,8 @@ def test(args, model, logger, saveImg = False):
             unique_ids_sad[tmp] += sad_diff
             mse_diffs += mse_diff
             sad_diffs += sad_diff
+            grad_diffs += grad_diff
+            connect_diffs += connect_diff
 
         origin_pred_mattes = (origin_pred_mattes * 255).astype(np.uint8)
 
@@ -130,8 +130,10 @@ def test(args, model, logger, saveImg = False):
             unique_ids_mse[ids] /= unique_ids[ids]
             unique_ids_sad[ids] /= unique_ids[ids]
             #logger.info(" {}: Eval-MSE: {} Eval-SAD: {}".format(ids, unique_ids_mse[ids], unique_ids_sad[ids]))
-        logger.info("Eval-MSE: {}".format(mse_diffs / cnt))
-        logger.info("Eval-SAD: {}".format(sad_diffs / cnt))
+        logger.info("Eval MSE: {}".format(mse_diffs / cnt))
+        logger.info("Eval SAD: {}".format(sad_diffs / cnt))
+        logger.info("Eval gradient loss: {}".format(grad_diffs / cnt))
+        logger.info("Eval connectivity loss; {}".format(connect_diffs / cnt))
     return sad_diffs / cnt
 
 if __name__ == "__main__":
