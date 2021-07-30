@@ -61,6 +61,8 @@ if train_add_test:
 
 # test
 max_size = 2176
+if_test_grad = False
+if_test_connect = False
 
 # optimizer
 nEpochs = 180

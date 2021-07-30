@@ -14,6 +14,7 @@ import matting.utils.config as config
 from matting.utils.utils import get_logger
 from matting.models.model import theModel
 from matting.inference import inference_rotation_multiscale, inference_aug
+from matting.utils.eval_loss import eval_mse, eval_sad, eval_gradient_loss, eval_connectivity_loss
 
 def get_args():
     parser = argparse.ArgumentParser(description='DeepImageMatting')
@@ -102,10 +103,12 @@ def test(args, model, logger, saveImg = False):
 
             #mse_diff = ((origin_pred_mattes - alpha) ** 2).sum() / pixel
             #sad_diff = np.abs(origin_pred_mattes - alpha).sum() / 1000.
-            mse_dff = eval_mse(origin_pred_mattes, alpha, trimap)
-            sad_dff = eval_sad(origin_pred_mattes, alpha, trimap)
-            grad_dff = eval_gradient_loss(origin_pred_mattes, alpha, trimap)
-            connect_dff = eval_connectivity_loss(origin_pred_mattes, alpha, trimap)
+            mse_diff = eval_mse(origin_pred_mattes, alpha, trimap)
+            sad_diff = eval_sad(origin_pred_mattes, alpha, trimap)
+            if config.if_test_grad:
+                grad_diff = eval_gradient_loss(origin_pred_mattes, alpha, trimap)
+            if config.if_test_connect:
+                connect_diff = eval_connectivity_loss(origin_pred_mattes, alpha, trimap)
 
 
             tmp = img_id.split("_")
@@ -115,8 +118,10 @@ def test(args, model, logger, saveImg = False):
             unique_ids_sad[tmp] += sad_diff
             mse_diffs += mse_diff
             sad_diffs += sad_diff
-            grad_diffs += grad_diff
-            connect_diffs += connect_diff
+            if config.if_test_grad:
+                grad_diffs += grad_diff
+            if config.if_test_connect:
+                connect_diffs += connect_diff
 
         origin_pred_mattes = (origin_pred_mattes * 255).astype(np.uint8)
 
@@ -132,8 +137,10 @@ def test(args, model, logger, saveImg = False):
             #logger.info(" {}: Eval-MSE: {} Eval-SAD: {}".format(ids, unique_ids_mse[ids], unique_ids_sad[ids]))
         logger.info("Eval MSE: {}".format(mse_diffs / cnt))
         logger.info("Eval SAD: {}".format(sad_diffs / cnt))
-        logger.info("Eval gradient loss: {}".format(grad_diffs / cnt))
-        logger.info("Eval connectivity loss; {}".format(connect_diffs / cnt))
+        if config.if_test_grad:
+            logger.info("Eval gradient loss: {}".format(grad_diffs / cnt))
+        if config.if_test_connect:
+            logger.info("Eval connectivity loss; {}".format(connect_diffs / cnt))
     return sad_diffs / cnt
 
 if __name__ == "__main__":

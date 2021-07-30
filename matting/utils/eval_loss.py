@@ -2,8 +2,8 @@
 
 import numpy as np
 import math
-import scipy
-import skimage
+from scipy import ndimage
+from skimage import measure
 # both pred and gt are numpy float arrays, dim = (height, width), taking values in the interval [0,1]
 # timap is a numpy uint8 array, dim = (height, width). 255 is foreground, 128 is unknown, 0 is background
 
@@ -20,9 +20,10 @@ def gauss(x, sigma):
 
 def dgauss(x, sigma):
     y = - x * gauss(x, sigma) / sigma ** 2
+    return y
 
 
-def compute_gradient(img, sigma):
+def gaussgradient(img, sigma):
     epsilon = 1e-2
     halfsize = sigma * math.sqrt(- 2 * math.log(math.sqrt(2*math.pi) * sigma * epsilon ))
     halfsize = int(halfsize)
@@ -36,20 +37,18 @@ def compute_gradient(img, sigma):
 
     hx = hx / np.sqrt(np.sum(np.abs(hx) ** 2 ))
     hy = hx.T
-    gx = scipy.ndimage.convolve(img, hx, mode = 'nearest' )
-    gy = scipy.ndimage.convolve(img, hy, mode = 'nearest' )
+    gx = ndimage.convolve(img, hx, mode = 'nearest' )
+    gy = ndimage.convolve(img, hy, mode = 'nearest' )
     return gx, gy
 
 def eval_gradient_loss(pred, gt, trimap):
-    pred = mat2gray(pred)
-    gt = mat2gray(gt)
     pred_x , pred_y =gaussgradient(pred , 1.4 )
     pred_map = np.sqrt(pred_x ** 2 + pred_y ** 2)
     gt_x , gt_y =gaussgradient(gt , 1.4 )
     gt_map = np.sqrt(gt_x ** 2 + gt_y ** 2)
 
     error_map = ( pred_map - gt_map ) ** 2
-    return np.sum(error_map * (trimap == 128))
+    return np.sum(error_map * (trimap == 128)) / 1000.
 
 
 def eval_connectivity_loss(pred, gt, trimap):
@@ -65,12 +64,12 @@ def eval_connectivity_loss(pred, gt, trimap):
         tmp_map = (pred_alpha_thresh * gt_alpha_thresh) * 1
         if np.sum(tmp_map) == 0:
             continue
-        cc = skimage.measure.label(
+        cc = measure.label(
             tmp_map,
             background = 0,
             connectivity = 1
         )
-        cc = skimage.measure.regionprops(cc)
+        cc = measure.regionprops(cc)
         size_vec = [c.area for c in cc]
         max_id = np.argmax(size_vec)
         coords =cc[max_id].coords
@@ -86,4 +85,4 @@ def eval_connectivity_loss(pred, gt, trimap):
     pred_phi = 1 - pred_d * (pred_d >= 0.15)
     gt_phi = 1 - gt_d * (gt_d >= 0.15)
     loss = np.sum(np.abs(pred_phi - gt_phi) * (trimap == 128))
-    return loss
+    return loss / 1000.
