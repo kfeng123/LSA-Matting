@@ -76,4 +76,9 @@ def new_estimate():
             cv2.imwrite(os.path.join(config.new_fg_path, f), foreground)
 
 if __name__ ==  "__main__":
+    new_estimate()
+
+    # do not run bad estimate, it will make a worse dataset. This is only for comparison
+    #bad_estimate()
+
 
