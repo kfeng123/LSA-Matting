@@ -72,7 +72,7 @@ def new_estimate():
         if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
             fg = cv2.imread(os.path.join(config.fg_path, f))[:,:,:3] / 255.
             alpha = cv2.imread(os.path.join(config.alpha_path, f), 0) / 255.
-            foreground = my_refine_foreground(alpha[:,:,np.newaxis]*fg, alpha)
+            foreground = my_refine_foreground(alpha[:,:,np.newaxis]*fg, alpha, fg)
             cv2.imwrite(os.path.join(config.new_fg_path, f), foreground)
 
 if __name__ ==  "__main__":
