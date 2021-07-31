@@ -75,7 +75,7 @@ def new_estimate():
             foreground = my_refine_foreground(alpha[:,:,np.newaxis]*fg, alpha, fg)
 
             assert(len(os.path.splitext(f)) == 2)
-            the_name = splitext(f)[0] + ".png"
+            the_name = os.path.splitext(f)[0] + ".png"
             cv2.imwrite(os.path.join(config.new_fg_path, the_name), foreground)
 
 if __name__ ==  "__main__":
