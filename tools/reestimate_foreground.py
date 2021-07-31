@@ -59,7 +59,7 @@ def my_refine_foreground(img, alpha, init_estimate):
         scaled_img = cv2.resize(img, (w // 2**scale, h // 2**scale), interpolation = cv2.INTER_LINEAR )
         scaled_alpha = cv2.resize(alpha, (w // 2**scale, h // 2**scale), interpolation = cv2.INTER_LINEAR )
         the_estimate = cv2.resize(the_estimate, (w // 2**scale, h // 2**scale), interpolation = cv2.INTER_LINEAR )
-        the_estimate = my_refine_foreground_iteration(scaled_img, scaled_alpha, the_estimate, 2**scale * 50)
+        the_estimate = my_refine_foreground_iteration(scaled_img, scaled_alpha, the_estimate, 2**scale * 10)
 
     the_estimate = (np.clip(the_estimate, 0, 1) * 255).astype(np.uint8)
     return the_estimate
@@ -73,7 +73,10 @@ def new_estimate():
             fg = cv2.imread(os.path.join(config.fg_path, f))[:,:,:3] / 255.
             alpha = cv2.imread(os.path.join(config.alpha_path, f), 0) / 255.
             foreground = my_refine_foreground(alpha[:,:,np.newaxis]*fg, alpha, fg)
-            cv2.imwrite(os.path.join(config.new_fg_path, f), foreground)
+
+            assert(len(os.path.splitext(f)) == 2)
+            the_name = splitext(f)[0] + ".png"
+            cv2.imwrite(os.path.join(config.new_fg_path, the_name), foreground)
 
 if __name__ ==  "__main__":
     new_estimate()
