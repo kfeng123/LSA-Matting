@@ -46,7 +46,8 @@ total_bg_list = []
 for f in os.listdir(new_fg_path):
     if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
         total_fg_list.append(os.path.join(new_fg_path, f))
-        total_alpha_list.append(os.path.join(alpha_path, f))
+        alpha_name = os.path.splitext(f)[0] + ".jpg"
+        total_alpha_list.append(os.path.join(alpha_path, alpha_name))
 for f in os.listdir(bg_path):
     if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
         total_bg_list.append(os.path.join(bg_path, f))
