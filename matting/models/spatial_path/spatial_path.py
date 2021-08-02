@@ -33,30 +33,30 @@ class spatial_path(nn.Module):
 
         self.add_module("fuse_conv",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 256, 128, 3, 2, 1, bias = False)),
+                                ("conv1", nn.Conv2d( 256, 128, 3, 1, 1, bias = False)),
                                 ("prelu1", nn.PReLU(128)),
                             ]))
                 )
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.pconv = nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 128, 128, 3, 2, 1, bias = False)),
+                                ("conv1", nn.Conv2d( 128, 128, 3, 1, 1, bias = False)),
                                 ("prelu1", nn.ReLU()),
-                                ("conv2", nn.Conv2d( 128, 128, 3, 2, 1, bias = False)),
+                                ("conv2", nn.Conv2d( 128, 128, 3, 1, 1, bias = False)),
                             ]))
 
         self.add_module("decoder_1",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 128 + 32, 32, 3, 2, 1, bias = False)),
+                                ("conv1", nn.Conv2d( 128 + 32, 32, 3, 1, 1, bias = False)),
                                 ("prelu1", nn.PReLU(32)),
                             ]))
                 )
 
         self.add_module("decoder_0",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 32 + 16, 32, 3, 2, 1, bias = False)),
+                                ("conv1", nn.Conv2d( 32 + 16, 32, 3, 1, 1, bias = False)),
                                 ("prelu1", nn.PReLU(32)),
-                                ("conv1", nn.Conv2d( 32, 1, 1, 1, 0, bias = False)),
+                                ("conv2", nn.Conv2d( 32, 1, 1, 1, 0, bias = False)),
                             ]))
                 )
 
