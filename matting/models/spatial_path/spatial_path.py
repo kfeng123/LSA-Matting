@@ -86,7 +86,7 @@ class spatial_path(nn.Module):
         y1 = self.decoder_1(y1)
         y0 = F.interpolate(y1, x0.shape[2:], mode = "nearest")
         y0 = torch.cat([y0, x0], 1)
-        alpha = self.decoder_1(y0)
+        alpha = self.decoder_0(y0)
         out = {}
         out['alpha'] = alpha
 
