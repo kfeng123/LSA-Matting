@@ -30,9 +30,9 @@ class decoderModule(nn.Module):
                     )
         self.final_final = nn.Sequential(
                 OrderedDict([
-                    ("conv1", nn.Conv2d(32, 32, 3, 1, 1)),
+                    ("conv1", nn.Conv2d(192, 192, 3, 1, 1)),
                     ("relu2", nn.ReLU(inplace=True)),
-                    ("conv2", nn.Conv2d(32, 1, 1, 1, 0)),
+                    ("conv2", nn.Conv2d(192, 1, 1, 1, 0)),
                 ])
         )
         def init_weights(m):
@@ -61,8 +61,9 @@ class decoderModule(nn.Module):
         tmp = F.interpolate(tmp, features['stage2'].shape[2:], mode = "nearest")
         features['stage2'] = torch.cat([features['stage2'], tmp], 1)
 
+        out['feature'] = features['stage2']
         alpha = self.final_final(features['stage2'])
-        out['alpha'] = F.interpolate(alpha, features['stage0'].shape[2:], mode = "bilinear")
+        out['alpha_coarse'] = F.interpolate(alpha, features['stage0'].shape[2:], mode = "bilinear")
 
         return out
 
