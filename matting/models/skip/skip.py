@@ -58,6 +58,9 @@ class skipModule_simple(nn.Module):
         out['stage0'] = image
         return out
 
+
+
+
 class skip_attention(nn.Module):
     def __init__(self, inp, oup):
         super(skip_attention, self).__init__()
@@ -77,6 +80,59 @@ class skip_attention(nn.Module):
         w = self.pconv(w)
         return fea * (F.relu6(w + 3.0, inplace = True) / 6.0)
 
+class trimap_process(nn.Module):
+    def __init(self):
+        super(trimap_process, self).__init__()
+        self.relu = nn.ReLU()
+        self.maxpool2 = nn.MaxPool2d(kernel_size = 2, stride = 2)
+        self.maxpool4 = nn.MaxPool2d(kernel_size = 4, stride = 4)
+        self.maxpool8 = nn.MaxPool2d(kernel_size = 8, stride = 8)
+        self.maxpool16 = nn.MaxPool2d(kernel_size = 16, stride = 16)
+        self.maxpool32 = nn.MaxPool2d(kernel_size = 32, stride = 32)
+
+    def forward(self, image):
+        trimap = image[:,3,:,:]
+        trimap = trimap[:, None, :, :]
+        F_mask = self.relu(trimap - 3./4.) * 4
+        B_mask = self.relu(1./4. - trimap) * 4
+        trimaps = {}
+        trimaps['stage2_F_large'] = self.maxpool4(F_mask)
+        trimaps['stage3_F_large'] = self.maxpool2(trimaps['stage2_F_large'])
+        trimaps['stage4_F_large'] = self.maxpool2(trimaps['stage3_F_large'])
+        trimaps['stage5_F_large'] = self.maxpool2(trimaps['stage4_F_large'])
+
+        trimaps['stage2_F_small'] = self.maxpool4(1-F_mask)
+        trimaps['stage3_F_small'] = self.maxpool2(trimaps['stage2_F_small'])
+        trimaps['stage4_F_small'] = self.maxpool2(trimaps['stage3_F_small'])
+        trimaps['stage5_F_small'] = self.maxpool2(trimaps['stage4_F_small'])
+        trimaps['stage2_F_small'] = 1 - trimaps['stage2_F_small']
+        trimaps['stage3_F_small'] = 1 - trimaps['stage3_F_small']
+        trimaps['stage4_F_small'] = 1 - trimaps['stage4_F_small']
+        trimaps['stage5_F_small'] = 1 - trimaps['stage5_F_small']
+
+        trimaps['stage2_B_large'] = self.maxpool4(B_mask)
+        trimaps['stage3_B_large'] = self.maxpool2(trimaps['stage2_B_large'])
+        trimaps['stage4_B_large'] = self.maxpool2(trimaps['stage3_B_large'])
+        trimaps['stage5_B_large'] = self.maxpool2(trimaps['stage4_B_large'])
+
+        trimaps['stage2_B_small'] = self.maxpool4(1-B_mask)
+        trimaps['stage3_B_small'] = self.maxpool2(trimaps['stage2_B_small'])
+        trimaps['stage4_B_small'] = self.maxpool2(trimaps['stage3_B_small'])
+        trimaps['stage5_B_small'] = self.maxpool2(trimaps['stage4_B_small'])
+        trimaps['stage2_B_small'] = 1 - trimaps['stage2_B_small']
+        trimaps['stage3_B_small'] = 1 - trimaps['stage3_B_small']
+        trimaps['stage4_B_small'] = 1 - trimaps['stage4_B_small']
+        trimaps['stage5_B_small'] = 1 - trimaps['stage5_B_small']
+
+        out = {}
+        out['stage0'] = torch.cat([F_mask, B_mask], 1)
+        out['stage2'] = torch.cat([trimaps['stage2_F_small'], trimaps['stage2_F_large'], trimaps['stage2_B_small'], trimaps['stage2_B_large']], 1)
+        out['stage3'] = torch.cat([trimaps['stage3_F_small'], trimaps['stage3_F_large'], trimaps['stage3_B_small'], trimaps['stage3_B_large']], 1)
+        out['stage4'] = torch.cat([trimaps['stage4_F_small'], trimaps['stage4_F_large'], trimaps['stage4_B_small'], trimaps['stage4_B_large']], 1)
+        out['stage5'] = torch.cat([trimaps['stage5_F_small'], trimaps['stage5_F_large'], trimaps['stage5_B_small'], trimaps['stage5_B_large']], 1)
+        return out
+
+
 class skipModule(nn.Module):
     def __init__(self, inChannels):
         super(skipModule, self).__init__()
@@ -88,12 +144,14 @@ class skipModule(nn.Module):
             'stage4': 256,
             'stage5': 512,
         }
-        self.skip0 = skip_attention(3, self.outChannels['stage0'])
-        self.skip1 = skip_attention(inChannels['stage1'], self.outChannels['stage1'])
-        self.skip2 = skip_attention(inChannels['stage2'], self.outChannels['stage2'])
-        self.skip3 = skip_attention(inChannels['stage3'], self.outChannels['stage3'])
-        self.skip4 = skip_attention(inChannels['stage4'], self.outChannels['stage4'])
-        self.skip5 = skip_attention(inChannels['stage5'], self.outChannels['stage5'])
+        #self.skip0 = skip_attention(3, self.outChannels['stage0'])
+        #self.skip1 = skip_attention(inChannels['stage1'] + 4, self.outChannels['stage1'])
+        self.skip2 = skip_attention(inChannels['stage2'] + 4, self.outChannels['stage2'])
+        self.skip3 = skip_attention(inChannels['stage3'] + 4, self.outChannels['stage3'])
+        self.skip4 = skip_attention(inChannels['stage4'] + 4, self.outChannels['stage4'])
+        self.skip5 = skip_attention(inChannels['stage5'] + 4, self.outChannels['stage5'])
+        self.trimap_process = trimap_process()
+
         # initialize weights
         def init_weights(m):
             if isinstance(m, nn.Conv2d):
@@ -106,11 +164,12 @@ class skipModule(nn.Module):
         self.apply(init_weights)
 
     def forward(self, image, inFeatures):
+        trimaps = self.trimap_process(image)
         out = {}
-        out['stage0'] = self.skip0(image[:,:3,:,:])
-        out['stage1'] = self.skip1(inFeatures['stage1'])
-        out['stage2'] = self.skip2(inFeatures['stage2'])
-        out['stage3'] = self.skip3(inFeatures['stage3'])
-        out['stage4'] = self.skip4(inFeatures['stage4'])
-        out['stage5'] = self.skip5(inFeatures['stage5'])
+        out['stage0'] = image[:,:3,:,:]
+        out['stage1'] = inFeatures['stage1']
+        out['stage2'] = self.skip2(torch.cat([inFeatures['stage2'], trimaps['stage2']], 1))
+        out['stage3'] = self.skip3(torch.cat([inFeatures['stage3'], trimaps['stage3']], 1))
+        out['stage4'] = self.skip4(torch.cat([inFeatures['stage4'], trimaps['stage4']], 1))
+        out['stage5'] = self.skip5(torch.cat([inFeatures['stage5'], trimaps['stage5']], 1))
         return out

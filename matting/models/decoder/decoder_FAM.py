@@ -60,7 +60,7 @@ class decoderModule(nn.Module):
                                     ("prelu1", nn.PReLU(self.outChannels['stage' + str(i)])),
                                 ]))
                     )
-        self.final_fusion = FAM_module(left_channels = 4, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
+        self.final_fusion = FAM_module(left_channels = 32, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
         self.final_final = nn.Sequential(
                 OrderedDict([
                     ("relu1", nn.ReLU(inplace=True)),
