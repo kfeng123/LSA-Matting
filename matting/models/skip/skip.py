@@ -81,7 +81,7 @@ class skip_attention(nn.Module):
         return fea * (F.relu6(w + 3.0, inplace = True) / 6.0)
 
 class trimap_process(nn.Module):
-    def __init(self):
+    def __init__(self):
         super(trimap_process, self).__init__()
         self.relu = nn.ReLU()
         self.maxpool2 = nn.MaxPool2d(kernel_size = 2, stride = 2)
