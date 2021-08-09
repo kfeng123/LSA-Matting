@@ -85,9 +85,9 @@ def train(args, model, optimizer, train_loader, lr_scheduler, epoch, logger):
         out = model(torch.cat((img_norm, trimap / 255.), 1))
         pred_mattes = out['alpha']
         loss = my_alpha_loss_multiscale(alpha, trimap, pred_mattes)
-        loss_coarse = my_alpha_loss_multiscale(alpha, trimap, out['alpha_coarse'])
+        #loss_coarse = my_alpha_loss_multiscale(alpha, trimap, out['alpha_coarse'])
         sum_loss += loss.item()
-        total_loss = loss + 0.2 * loss_coarse
+        total_loss = loss #+ 0.2 * loss_coarse
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()

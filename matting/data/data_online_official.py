@@ -10,7 +10,8 @@ from PIL import Image
 
 from ..utils import config
 
-interpolation_list = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC]
+#interpolation_list = [cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC]
+interpolation_list = [cv2.INTER_CUBIC]
 
 def random_resize(input, size):
     tmp = random.randint(0, len(interpolation_list)-1)
@@ -20,25 +21,6 @@ def random_warpAffine(input, rot_mat, size):
     tmp = random.randint(0, len(interpolation_list)-1)
     return cv2.warpAffine(input, rot_mat, size, flags=interpolation_list[tmp])
 
-def myborder(alpha, fg):
-    h, w = alpha.shape[0], alpha.shape[1]
-    fg_copy = fg.copy()
-    alpha_float = alpha / 255.
-    for j in range(3):
-        fg[:,:,j] = (fg[:,:,j] * alpha_float) #.astype(np.uint8)
-    fg_new = cv2.blur(fg, (9, 9))
-
-    alpha_pos_blur = cv2.blur(alpha / 255., (9, 9))
-    adjust_weight = alpha_pos_blur * (alpha_pos_blur > 1e-5) * (alpha_pos_blur < 1 - 1e-5) + (alpha_pos_blur <= 1e-5) + (alpha_pos_blur  >= 1 - 1e-5)
-    for j in range(3):
-        tmp = np.clip( fg_new[:,:,j] / adjust_weight, 0, 255).astype(np.uint8)
-        fg_new[:,:,j] = tmp
-
-    final_weight = alpha_float
-    for j in range(3):
-        fg[:,:,j] = fg_new[:,:,j] * (1 - final_weight) + fg_copy[:,:,j] * (alpha_pos_blur > 1e-5) * final_weight
-    return fg
-
 def original_trimap(alpha):
     out = {}
 
@@ -47,8 +29,8 @@ def original_trimap(alpha):
     unknown = fg_wide - fg
 
     distanceTrans = cv2.distanceTransform(1-unknown, cv2.DIST_L2, 0)
-    unknown =  np.logical_or(np.logical_and(distanceTrans <= np.random.randint(0, 25), fg < 1),\
-                np.logical_and(distanceTrans <= np.random.randint(0, 25), fg > 0) )
+    unknown =  np.logical_or(np.logical_and(distanceTrans <= np.random.randint(1, 25), fg < 1),\
+                np.logical_and(distanceTrans <= np.random.randint(1, 25), fg > 0) )
     trimap = fg * 255
     trimap[unknown] = 128
 
@@ -199,8 +181,6 @@ class MatDataset(torch.utils.data.Dataset):
         alpha = cv2.imread(image_alpha_path, 0)
         fg = cv2.imread(image_fg_path)[:, :, :3]
         bg = cv2.imread(image_bg_path)[:, :, :3]
-
-        # fg = myborder(alpha, fg)
 
         bh, bw, bc, = fg.shape
         if self.train_size_h > bh:
