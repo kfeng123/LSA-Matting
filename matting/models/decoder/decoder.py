@@ -78,9 +78,11 @@ class decoderModule(nn.Module):
         tmp = F.interpolate(tmp, features['stage2'].shape[2:], mode = "nearest")
         features['stage2'] = torch.cat([features['stage2'], tmp], 1)
 
-        out['feature'] = features['stage2']
-        alpha = self.final_final(features['stage2'])
-        out['alpha_coarse'] = F.interpolate(alpha, features['stage0'].shape[2:], mode = "bilinear")
+        tmp = self.decoder_2(features['stage2'])
+
+        out['feature'] = tmp
+        #alpha = self.final_final(features['stage2'])
+        #out['alpha_coarse'] = F.interpolate(alpha, features['stage0'].shape[2:], mode = "bilinear")
 
         return out
 

@@ -9,31 +9,37 @@ class spatial_path(nn.Module):
         super(spatial_path, self).__init__()
         self.add_module("encoder_0",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 3, 16, 3, 1, 1, bias = True)),
+                                ("conv1", nn.Conv2d( 3, 16, 3, 1, 1, bias = False)),
+                                #("norm1", nn.BatchNorm2d(16)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
                             ]))
                 )
         self.add_module("encoder_1",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 16, 32, 3, 2, 1, bias = True)),
+                                ("conv1", nn.Conv2d( 16, 32, 3, 2, 1, bias = False)),
+                                #("norm1", nn.BatchNorm2d(32)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
-                                ("conv2", nn.Conv2d( 32, 32, 3, 1, 1, bias = True)),
+                                ("conv2", nn.Conv2d( 32, 32, 3, 1, 1, bias = False)),
+                                #("norm2", nn.BatchNorm2d(32)),
                                 ("ReLU2", nn.ReLU(inplace = True)),
                             ]))
                 )
 
         self.add_module("encoder_2",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 32, 64, 3, 2, 1, bias = True)),
+                                ("conv1", nn.Conv2d( 32, 64, 3, 2, 1, bias = False)),
+                                #("norm1", nn.BatchNorm2d(64)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
-                                ("conv2", nn.Conv2d( 64, 64, 3, 1, 1, bias = True)),
+                                ("conv2", nn.Conv2d( 64, 64, 3, 1, 1, bias = False)),
+                                #("norm2", nn.BatchNorm2d(64)),
                                 ("ReLU2", nn.ReLU(inplace = True)),
                             ]))
                 )
 
         self.add_module("fuse_conv",
             nn.Sequential(OrderedDict([
-                                ("conv1", nn.Conv2d( 256, 128, 3, 1, 1, bias = True)),
+                                ("conv1", nn.Conv2d( 128, 128, 3, 1, 1, bias = True)),
+                                #("norm1", nn.BatchNorm2d(128)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
                             ]))
                 )
@@ -48,6 +54,7 @@ class spatial_path(nn.Module):
         self.add_module("decoder_1",
             nn.Sequential(OrderedDict([
                                 ("conv1", nn.Conv2d( 128 + 32, 32, 3, 1, 1, bias = True)),
+                                #("norm1", nn.BatchNorm2d(32)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
                             ]))
                 )
@@ -56,8 +63,8 @@ class spatial_path(nn.Module):
             nn.Sequential(OrderedDict([
                                 ("conv1", nn.Conv2d( 32 + 16, 32, 3, 1, 1, bias = True)),
                                 ("ReLU1", nn.ReLU(inplace = True)),
-                                ("conv2", nn.Conv2d( 32, 32, 3, 1, 1, bias = True)),
-                                ("ReLU2", nn.ReLU(inplace = True)),
+                                #("conv2", nn.Conv2d( 32, 32, 3, 1, 1, bias = True)),
+                                #("ReLU2", nn.ReLU(inplace = True)),
                                 ("conv3", nn.Conv2d( 32, 1, 1, 1, 0, bias = True)),
                             ]))
                 )
