@@ -66,7 +66,7 @@ if_test_grad = False
 if_test_connect = False
 
 # optimizer
-nEpochs = 180
+nEpochs = 160
 opt_method = "Adam"
 lr = 5e-5
 weight_decay = 1e-4

@@ -30,7 +30,7 @@ class theModel(nn.Module):
         fine_out = self.spatial_path(x[:,:3,:,:], decoder_out['feature'])
         out = {}
         out['alpha'] = fine_out['alpha']
-        out['alpha_coarse'] = decoder_out['alpha_coarse']
+        #out['alpha_coarse'] = decoder_out['alpha_coarse']
         return out
 
 if __name__ == "__main__":

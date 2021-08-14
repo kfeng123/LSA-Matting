@@ -137,8 +137,8 @@ class skipModule(nn.Module):
     def __init__(self, inChannels):
         super(skipModule, self).__init__()
         self.outChannels ={
-            'stage0': 32,
-            'stage1': 64,
+            'stage0': 16,
+            'stage1': 32,
             'stage2': 64,
             'stage3': 128,
             'stage4': 256,
