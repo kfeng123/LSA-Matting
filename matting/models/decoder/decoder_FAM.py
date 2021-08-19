@@ -4,6 +4,25 @@ import torch.nn as nn
 import torch.nn.functional as F
 from ...utils import config
 
+class my_conv(nn.Module):
+    def __init__(self, inp, oup):
+        super(my_conv, self).__init__()
+        self.conv1 = nn.Conv2d(inp, oup, 3, 1, 1, bias = False)
+        self.norm1 = nn.BatchNorm2d(oup)
+        self.relu1 = nn.PReLU(oup)
+
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Conv2d(oup, oup, 1, 1, 0)
+
+    def forward(self, input):
+        fea = self.conv1(input)
+        fea = self.norm1(fea)
+        fea = self.relu1(fea)
+
+        w = self.avg_pool(fea)
+        w = self.fc(w)
+        return fea * ( F.relu6(w + 3.0, inplace = True) / 6.0 )
+
 class FAM_module(nn.Module):
     def __init__(self, left_channels, down_channels, m_channels, out_channels):
         super(FAM_module, self).__init__()
@@ -54,13 +73,9 @@ class decoderModule(nn.Module):
                 }
         for i in range(1, self.lastStage + 1):
             self.add_module("decoder_"+str(i),
-                nn.Sequential(OrderedDict([
-                                    ("conv1", nn.Conv2d( self.inChannels['stage'+str(i)], self.outChannels['stage'+str(i)], 3, 1, 1, bias = False)),
-                                    ("norm1", nn.BatchNorm2d(self.outChannels['stage'+str(i)])),
-                                    ("prelu1", nn.PReLU(self.outChannels['stage' + str(i)])),
-                                ]))
+                            my_conv(self.inChannels['stage'+str(i)], self.outChannels['stage'+str(i)])
                     )
-        self.final_fusion = FAM_module(left_channels = 32, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
+        self.final_fusion = FAM_module(left_channels = 4, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
         self.final_final = nn.Sequential(
                 OrderedDict([
                     ("relu1", nn.ReLU(inplace=True)),
@@ -83,7 +98,7 @@ class decoderModule(nn.Module):
 
 
     def forward(self, features):
-        trimap = features['stage0'][:,3:4,:,:]
+        #trimap = features['stage0'][:,3:4,:,:]
         out = {}
         theStages = list(range(2, self.lastStage + 1))[::-1]
         for stage in theStages:

@@ -24,12 +24,13 @@ class theModel(nn.Module):
         #self.spatial_path = spatial_path()
 
     def forward(self, x):
-        encoder_out = self.backbone(x[:,:4,:,:])
+        #encoder_out = self.backbone(x[:,:4,:,:])
+        encoder_out = self.backbone(x)
         skip_out = self.skip(x, encoder_out)
         decoder_out = self.decoder( skip_out )
         #fine_out = self.spatial_path(x[:,:3,:,:], decoder_out['feature'])
         out = {}
-        out['alpha'] = fine_out['alpha']
+        out['alpha'] = decoder_out['alpha']
         #out['alpha_coarse'] = decoder_out['alpha_coarse']
         return out
 
