@@ -58,11 +58,11 @@ class random_rotation:
         fg = random_warpAffine(fg, rot_mat, (w, h))
 
         # bg
-        #bg_centerh = h//2 + random.randint(self.center_h_range[0], self.center_h_range[1])
-        #bg_centerw = w//2 + random.randint(self.center_w_range[0], self.center_w_range[1])
-        #bg_degree = random.randint(self.degrees[0], self.degrees[1])
-        #bg_rot_mat = cv2.getRotationMatrix2D((bg_centerw, bg_centerh), bg_degree, 1)
-        #bg = random_warpAffine(bg, bg_rot_mat, (w, h))
+        bg_centerh = h//2 + random.randint(self.center_h_range[0], self.center_h_range[1])
+        bg_centerw = w//2 + random.randint(self.center_w_range[0], self.center_w_range[1])
+        bg_degree = random.randint(self.degrees[0], self.degrees[1])
+        bg_rot_mat = cv2.getRotationMatrix2D((bg_centerw, bg_centerh), bg_degree, 1)
+        bg = random_warpAffine(bg, bg_rot_mat, (w, h))
 
         return alpha, fg, bg
 
@@ -113,26 +113,9 @@ def random_crop(alpha, fg, bg, crop_h, crop_w):
     end_h   = center_h + delta_h
     end_w   = center_w + delta_w
 
-    alpha = alpha [start_h : end_h, start_w : end_w]
-    fg = fg[start_h : end_h, start_w : end_w]
-
-    center_h = np.random.randint(h)
-    if center_h < delta_h:
-        center_h = delta_h
-    if center_h > h - delta_h:
-        center_h = h - delta_h
-    center_w = np.random.randint(w)
-    if center_w < delta_w:
-        center_w = delta_w
-    if center_w > w - delta_w:
-        center_w = w - delta_w
-
-    start_h = center_h - delta_h
-    start_w = center_w - delta_w
-    end_h   = center_h + delta_h
-    end_w   = center_w + delta_w
-
-    bg = bg[start_h : end_h, start_w : end_w]
+    alpha  =alpha [start_h : end_h, start_w : end_w]
+    fg    = fg   [start_h : end_h, start_w : end_w]
+    bg    = bg   [start_h : end_h, start_w : end_w]
     return alpha, fg, bg
 
 def random_flip(alpha, fg, bg):
@@ -199,7 +182,6 @@ class MatDataset(torch.utils.data.Dataset):
         fg = cv2.imread(image_fg_path)[:, :, :3]
         bg = cv2.imread(image_bg_path)[:, :, :3]
 
-        # if fg is too small, pad it
         bh, bw, bc, = fg.shape
         if self.train_size_h > bh:
             tmp = self.train_size_h - bh
@@ -210,17 +192,6 @@ class MatDataset(torch.utils.data.Dataset):
             tmp = self.train_size_w - bw
             fg = cv2.copyMakeBorder(fg, tmp, tmp, tmp, tmp, cv2.BORDER_DEFAULT)
             alpha = cv2.copyMakeBorder(alpha, tmp, tmp, tmp, tmp, cv2.BORDER_DEFAULT)
-            bh, bw, bc, = fg.shape
-
-        # if fg is too large, resize it
-        wratio = 2100. / bw
-        hratio = 2100. / bh
-        ratio = min(wratio, hratio)
-        if ratio < 1:
-            nbw = int(bw * ratio + 1.0)
-            nbh = int(bh * ratio + 1.0)
-            alpha = random_resize(alpha, (nbw, nbh))
-            fg = random_resize(fg, (nbw, nbh))
             bh, bw, bc, = fg.shape
 
         img_info.append(fg.shape)
