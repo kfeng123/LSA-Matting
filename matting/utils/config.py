@@ -33,11 +33,15 @@ printFreq = 20
 ckptSaveFreq = 10
 testFreq= 10
 
-train_size_h = 512
-train_size_w = 512
+#train_size_h = 512
+#train_size_w = 512
+train_size_h = 640
+train_size_w = 640
 
-crop_size_h = [i for i in range(448, 577)]
-crop_size_w = [i for i in range(448, 577)]
+#crop_size_h = [i for i in range(448, 577)]
+#crop_size_w = [i for i in range(448, 577)]
+crop_size_h = [i for i in range(480, 801)]
+crop_size_w = [i for i in range(480, 801)]
 
 # training data loader
 total_fg_list = []
