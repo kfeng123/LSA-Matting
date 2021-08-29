@@ -12,7 +12,7 @@ class PPM(nn.Module):
                     ("aap", nn.AdaptiveAvgPool2d(scale)),
                     ("conv", nn.Conv2d(in_dim, in_dim//4, kernel_size = 1, bias = False)),
                     ("norm", nn.BatchNorm2d(in_dim//4)),
-                    ("prelu", nn.PReLU(in_dim//4))
+                    ("prelu", nn.ReLU(inplace = True))
                 ])))
     def forward(self, x):
         x_size = x.size()

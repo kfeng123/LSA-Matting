@@ -18,7 +18,7 @@ class theModel(nn.Module):
         self.lastStage = 5
         image_channel = 4
         self.backbone = ResNetV1d(in_channels = image_channel, depth = 50)
-        self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = True)
+        self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = False)
         #self.skip = skipModule(self.backbone._out_feature_channels)
         self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel)
         #self.spatial_path = spatial_path()

@@ -9,7 +9,7 @@ class my_conv(nn.Module):
         super(my_conv, self).__init__()
         self.conv1 = nn.Conv2d(inp, oup, 3, 1, 1, bias = False)
         self.norm1 = nn.BatchNorm2d(oup)
-        self.relu1 = nn.PReLU(oup)
+        self.relu1 = nn.ReLU(inplace = True)
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Conv2d(oup, oup, 1, 1, 0)
