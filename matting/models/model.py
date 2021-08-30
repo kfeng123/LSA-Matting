@@ -35,12 +35,14 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
-        self.a = torch.zeros([1, self.simple_model.skip.outChannels['stage5'], 1, 1], requires_grad = True).cuda()
-        self.b = torch.zeros([1, self.simple_model.skip.outChannels['stage5'], 1, 1], requires_grad = True).cuda()
+        self.a = torch.zeros([1, simple_model.skip.outChannels['stage5'], 1, 1]).cuda()
+        self.a.requires_grad = True
+        self.b = torch.zeros([1, simple_model.skip.outChannels['stage5'], 1, 1]).cuda()
+        self.b.requires_grad = True
         # laplacian kernel
-        self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False)
+        self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
         self.laplacian_kernel[0,0,1,1] = -8
-    def forward(self. x):
+    def forward(self, x):
         nn.init.zeros_(self.a)
         nn.init.zeros_(self.b)
 
@@ -67,14 +69,15 @@ class test_time_model(nn.Module):
                 skip_out['stage5'] = skip_out['stage5'] * torch.sigmoid(self.a) + self.b
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
-                loss = 1- (decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number
-                +
+                loss = 1- (decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number + \
                 (decoder_out['alpha'] * neg_edge_detach).sum() / neg_pixel_number
                 print("haha loss ", _, ":", loss)
 
                 with torch.no_grad():
-                    self.a.grad.zero_()
-                    self.b.grad.zero_()
+                    if self.a.grad is not None:
+                        self.a.grad.detach().zero_()
+                    if self.b.grad is not None:
+                        self.b.grad.detach().zero_()
                 loss.backward()
                 self.a = self.a - self.a.grad * 1e-2
                 self.b = self.b - self.b.grad * 1e-2

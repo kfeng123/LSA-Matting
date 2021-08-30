@@ -42,9 +42,6 @@ def gen_dataset(imgdir, trimapdir):
 
 def test(args, model, logger, saveImg = False):
     model.eval()
-    ###################################
-    model = test_time_model(model)
-    ###################################
 
     sample_set = []
     img_ids = os.listdir(config.test_img_path)
@@ -161,12 +158,12 @@ if __name__ == "__main__":
 
     logger_test = get_logger(os.path.join(config.saveDir, "log_test.txt"), "testLogger")
     model = theModel()
-
+    ###################################
+    model = test_time_model(model)
+    ###################################
     model = nn.DataParallel(model)
-
     ckpt = torch.load(args.resume)
     model.load_state_dict(ckpt['state_dict'], strict=True)
-
     if config.cuda:
         model = model.cuda()
 

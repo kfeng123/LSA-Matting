@@ -12,7 +12,7 @@ import time
 
 import matting.utils.config as config
 from matting.utils.utils import get_logger
-from matting.models.model import theModel
+from matting.models.model import theModel, test_time_model
 from matting.inference import inference_rotation_multiscale
 
 def get_args():
@@ -33,9 +33,6 @@ def compute_gradient(img):
 
 def test(model, test_img_path, test_trimap_path, output_path):
     model.eval()
-    ###################################
-    model = test_time_model(model)
-    ###################################
     sample_set = []
     img_ids = os.listdir(test_img_path)
     img_ids = [img_id for img_id in img_ids if img_id[-4:] == ".png"]
@@ -76,6 +73,9 @@ if __name__ == "__main__":
         raise Exception("No GPU found")
 
     model = theModel()
+    ###################################
+    model = test_time_model(model)
+    ###################################
     model = nn.DataParallel(model)
     ckpt = torch.load(args.resume)
     model.load_state_dict(ckpt['state_dict'], strict=True)

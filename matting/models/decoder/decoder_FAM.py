@@ -101,11 +101,29 @@ class decoderModule(nn.Module):
         #trimap = features['stage0'][:,3:4,:,:]
         out = {}
         theStages = list(range(2, self.lastStage + 1))[::-1]
-        for stage in theStages:
-            tmp = getattr(self, "decoder_"+str(stage))(features['stage'+str(stage)])
-            tmp = F.interpolate(tmp, features['stage'+str(stage-1)].shape[2:], mode = "nearest")
-            features['stage'+str(stage-1)] = torch.cat([features['stage'+str(stage-1)], tmp], 1)
-        tmp = self.decoder_1(features['stage1'])
+        #for stage in theStages:
+        #    tmp = getattr(self, "decoder_"+str(stage))(features['stage'+str(stage)])
+        #    tmp = F.interpolate(tmp, features['stage'+str(stage-1)].shape[2:], mode = "nearest")
+        #    features['stage'+str(stage-1)] = torch.cat([features['stage'+str(stage-1)], tmp], 1)
+
+        # stage 5 to stage 4
+        tmp = self.decoder_5(features['stage5'])
+        tmp = F.interpolate(tmp, features['stage4'].shape[2:], mode = "nearest")
+        tmp = torch.cat([features['stage4'], tmp], 1)
+        # stage 4 to stage 3
+        tmp = self.decoder_4(tmp)
+        tmp = F.interpolate(tmp, features['stage3'].shape[2:], mode = "nearest")
+        tmp = torch.cat([features['stage3'], tmp], 1)
+        # stage 3 to stage 2
+        tmp = self.decoder_3(tmp)
+        tmp = F.interpolate(tmp, features['stage2'].shape[2:], mode = "nearest")
+        tmp = torch.cat([features['stage2'], tmp], 1)
+        # stage 2 to stage 1
+        tmp = self.decoder_2(tmp)
+        tmp = F.interpolate(tmp, features['stage1'].shape[2:], mode = "nearest")
+        tmp = torch.cat([features['stage1'], tmp], 1)
+
+        tmp = self.decoder_1(tmp)
         alpha = self.final_fusion(features['stage0'], tmp)
         alpha = self.final_final(alpha)
         out['alpha'] = alpha
