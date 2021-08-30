@@ -83,8 +83,8 @@ class test_time_model(nn.Module):
                 loss.backward()
 
                 with torch.no_grad():
-                    self.a.add_( self.a.grad, alpha = - 1e-2)
-                    self.b.add_( self.b.grad, alpha = - 1e-2)
+                    self.a.add_( self.a.grad, alpha = - 1e-1)
+                    self.b.add_( self.b.grad, alpha = - 1e-1)
 
         out = {}
         out['alpha'] = decoder_out['alpha']
