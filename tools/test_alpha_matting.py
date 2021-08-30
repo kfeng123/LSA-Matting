@@ -33,6 +33,9 @@ def compute_gradient(img):
 
 def test(model, test_img_path, test_trimap_path, output_path):
     model.eval()
+    ###################################
+    model = test_time_model(model)
+    ###################################
     sample_set = []
     img_ids = os.listdir(test_img_path)
     img_ids = [img_id for img_id in img_ids if img_id[-4:] == ".png"]
