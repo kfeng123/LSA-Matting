@@ -65,8 +65,9 @@ class test_time_model(nn.Module):
             skip_out = self.skip(x, encoder_out)
 
         with torch.enable_grad():
+            tmp_stage5 = skip_out['stage5']
             for _ in range(5):
-                skip_out['stage5'] = skip_out['stage5'] * torch.sigmoid(self.a) + self.b
+                skip_out['stage5'] = tmp_stage5 * torch.sigmoid(self.a) + self.b
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
                 loss = 1- (decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number + \
@@ -78,9 +79,12 @@ class test_time_model(nn.Module):
                         self.a.grad.detach().zero_()
                     if self.b.grad is not None:
                         self.b.grad.detach().zero_()
+
                 loss.backward()
-                self.a = self.a - self.a.grad * 1e-2
-                self.b = self.b - self.b.grad * 1e-2
+
+                with torch.no_grad():
+                    self.a.add_( self.a.grad, alpha = - 1e-2)
+                    self.b.add_( self.b.grad, alpha = - 1e-2)
 
         out = {}
         out['alpha'] = decoder_out['alpha']
