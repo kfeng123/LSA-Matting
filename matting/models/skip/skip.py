@@ -61,6 +61,25 @@ class skipModule_simple(nn.Module):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class skip_attention(nn.Module):
     def __init__(self, inp, oup):
         super(skip_attention, self).__init__()

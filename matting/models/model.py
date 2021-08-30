@@ -4,13 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ..utils import config
-from .backbone.vovnet import VoVNet
-from .backbone.resnet import resnet18, resnet50
-from .backbone.resnet26d import resnet26d
 from .backbone.mmclassification.resnet import ResNetV1d
-from .skip.skip import skipModule_simple, skipModule
+from .skip.skip import skipModule_simple
 from .decoder.decoder_FAM import  decoderModule
-from .spatial_path.spatial_path import spatial_path
 
 class theModel(nn.Module):
     def __init__(self):
@@ -19,19 +15,72 @@ class theModel(nn.Module):
         image_channel = 4
         self.backbone = ResNetV1d(in_channels = image_channel, depth = 50)
         self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = False)
-        #self.skip = skipModule(self.backbone._out_feature_channels)
         self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel)
-        #self.spatial_path = spatial_path()
 
     def forward(self, x):
         #encoder_out = self.backbone(x[:,:4,:,:])
         encoder_out = self.backbone(x)
         skip_out = self.skip(x, encoder_out)
         decoder_out = self.decoder( skip_out )
-        #fine_out = self.spatial_path(x[:,:3,:,:], decoder_out['feature'])
         out = {}
         out['alpha'] = decoder_out['alpha']
-        #out['alpha_coarse'] = decoder_out['alpha_coarse']
+        return out
+
+
+class test_time_model(nn.Module):
+    def __init__(self, simple_model):
+        super(test_time_model, self).__init__()
+        # model
+        self.backbone = simple_model.backbone
+        self.skip = simple_model.skip
+        self.decoder = simple_model.decoder
+        # hyperparameter to be optimized
+        self.a = torch.zeros([1, self.simple_model.skip.outChannels['stage5'], 1, 1], requires_grad = True).cuda()
+        self.b = torch.zeros([1, self.simple_model.skip.outChannels['stage5'], 1, 1], requires_grad = True).cuda()
+        # laplacian kernel
+        self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False)
+        self.laplacian_kernel[0,0,1,1] = -8
+    def forward(self. x):
+        nn.init.zeros_(self.a)
+        nn.init.zeros_(self.b)
+
+        trimap_detach = x[:,3:4,:,:].detach()
+        pos_detach = (trimap_detach > 0.75) * 1.
+        neg_detach = (trimap_detach < 0.25) * 1.
+        unknown_detach = 1 - pos_detach - neg_detach
+        pos_edge_detach = F.conv2d(pos_detach, self.laplacian_kernel, padding = 1)
+        pos_edge_detach = torch.abs(pos_edge_detach)
+        pos_edge_detach = pos_edge_detach * unknown_detach
+        pos_pixel_number = pos_edge_detach.sum() + 0.1
+
+        neg_edge_detach = F.conv2d(neg_detach, self.laplacian_kernel, padding = 1)
+        neg_edge_detach = torch.abs(neg_edge_detach)
+        neg_edge_detach = neg_edge_detach * unknown_detach
+        neg_pixel_number = neg_edge_detach.sum() + 0.1
+
+        with torch.no_grad():
+            encoder_out = self.backbone(x)
+            skip_out = self.skip(x, encoder_out)
+
+        with torch.enable_grad():
+            for _ in range(5):
+                skip_out['stage5'] = skip_out['stage5'] * torch.sigmoid(self.a) + self.b
+                decoder_out = self.decoder( skip_out )
+                decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
+                loss = 1- (decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number
+                +
+                (decoder_out['alpha'] * neg_edge_detach).sum() / neg_pixel_number
+                print("haha loss ", _, ":", loss)
+
+                with torch.no_grad():
+                    self.a.grad.zero_()
+                    self.b.grad.zero_()
+                loss.backward()
+                self.a = self.a - self.a.grad * 1e-2
+                self.b = self.b - self.b.grad * 1e-2
+
+        out = {}
+        out['alpha'] = decoder_out['alpha']
         return out
 
 if __name__ == "__main__":

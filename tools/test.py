@@ -12,7 +12,7 @@ import time
 
 import matting.utils.config as config
 from matting.utils.utils import get_logger
-from matting.models.model import theModel
+from matting.models.model import theModel, test_time_model
 from matting.inference import inference_rotation_multiscale, inference_aug
 from matting.utils.eval_loss import eval_mse, eval_sad, eval_gradient_loss, eval_connectivity_loss
 
@@ -42,6 +42,10 @@ def gen_dataset(imgdir, trimapdir):
 
 def test(args, model, logger, saveImg = False):
     model.eval()
+    ###################################
+    model = test_time_model(model)
+    ###################################
+
     sample_set = []
     img_ids = os.listdir(config.test_img_path)
     img_ids = [img_id for img_id in img_ids if img_id[-4:] == ".png"]

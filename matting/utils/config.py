@@ -1,7 +1,6 @@
 import os
 cuda = True
 
-
 # data
 input_format = "RGB"
 mean = [0.485, 0.456, 0.406]

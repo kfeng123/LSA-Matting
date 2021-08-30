@@ -1,12 +1,9 @@
-
-
 import cv2
 import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 def cross_entropy_loss(three, alpha, trimap):
     trimap_opt = torch.zeros(alpha.shape, dtype = torch.long).cuda()
