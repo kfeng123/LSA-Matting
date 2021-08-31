@@ -24,6 +24,13 @@ test_img_path = os.path.join(test_path_base, "merged")
 test_trimap_path = os.path.join(test_path_base, "trimaps")
 test_alpha_path = os.path.join(test_path_base, "alpha_copy")
 
+# fine-tuning data (training data of alphamatting.com)
+fine_tuning_names = [str(i).zfill(2) + ".png" for i in range(1,28)]
+fine_tuning_img_list =[os.path.join("/sda/WangRui/alphamatting_train/input_training_lowres", name) for name in fine_tuning_names]
+fine_tuning_alpha_list =[os.path.join("/sda/WangRui/alphamatting_train/gt_training_lowres", name) for name in fine_tuning_names]
+fine_tuning_trimap1_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap1", name) for name in fine_tuning_names]
+fine_tuning_trimap2_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap2", name) for name in fine_tuning_names]
+
 # train
 batchSize = 16
 threads = 20
@@ -69,7 +76,7 @@ if_test_grad = False
 if_test_connect = False
 
 # optimizer
-nEpochs = 160
+nEpochs = 200
 opt_method = "Adam"
 lr = 5e-5
 weight_decay = 1e-4
