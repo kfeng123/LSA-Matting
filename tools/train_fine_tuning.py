@@ -164,7 +164,7 @@ def main():
         train(args, model, optimizer, train_loader, lr_scheduler, epoch, logger)
         if epoch > 0 and epoch % config.ckptSaveFreq == 0:
             checkpoint(epoch, config.saveDir, model, logger)
-        if epoch > 0 and config.testFreq > 0 and epoch % config.testFreq == 0:
+        if epoch > 0 and config.testFreq > 0 and epoch % 20 == 0:
             logger_test.info("Epoch: {}".format(epoch))
             test(args, model, logger_test)
 

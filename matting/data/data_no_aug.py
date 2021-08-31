@@ -73,7 +73,7 @@ class MatDataset(torch.utils.data.Dataset):
         # read fg, alpha
         img = cv2.imread(image_path)[:, :, :3]
         alpha = cv2.imread(alpha_path, 0)
-        trimap = cv2.imread(trimapa_path, 0)
+        trimap = cv2.imread(trimap_path, 0)
 
         img_info.append(img.shape)
 
@@ -90,10 +90,23 @@ class MatDataset(torch.utils.data.Dataset):
         else:
             pad_w = theDivider - w % theDivider
         img = np.pad(img, ((0, pad_h), (0, pad_w), (0,0)), mode = "reflect")
-        alpha = np.pad(alpha, ((0, pad_h), (0, pad_w), (0,0)), mode = "reflect")
+        alpha = np.pad(alpha, ((0, pad_h), (0, pad_w)), mode = "reflect")
         trimap = np.pad(trimap, ((0, pad_h), (0, pad_w)), mode = "reflect")
 
         h, w = img.shape[0], img.shape[1]
+
+        if random.random() < 0.5:
+            img = cv2.flip(img, 1)
+            alpha = cv2.flip(alpha, 1)
+            trimap = cv2.flip(trimap, 1)
+        if random.random() < 0.5:
+            img = cv2.flip(img, 0)
+            alpha = cv2.flip(alpha, 0)
+            trimap = cv2.flip(trimap, 0)
+        if random.random() < 0.5:
+            img = img.transpose((1, 0, 2))
+            alpha = alpha.transpose((1, 0))
+            trimap = trimap.transpose((1, 0))
 
         if random.random() < 0.2:
             img = 255 - img
@@ -101,9 +114,9 @@ class MatDataset(torch.utils.data.Dataset):
             img = img[:,:,np.random.permutation(3)]
 
         ## debug
-        cv2.imwrite("result/debug/debug_{}_img.png".format(index), img)
-        cv2.imwrite("result/debug/debug_{}_alpha.png".format(index), alpha)
-        cv2.imwrite("result/debug/debug_{}_trimap.png".format(index), trimap)
+        #cv2.imwrite("result/debug/debug_{}_img.png".format(index), img)
+        #cv2.imwrite("result/debug/debug_{}_alpha.png".format(index), alpha)
+        #cv2.imwrite("result/debug/debug_{}_trimap.png".format(index), trimap)
 
         #########
 
