@@ -59,7 +59,7 @@ def build_model(args, logger):
     return start_epoch, model, ifResume
 
 def train(args, model, optimizer, train_loader, lr_scheduler, epoch, logger):
-    model.train()
+    model.eval()
     t0 = time.time()
     sum_loss = 0
     sum_loss_alpha = 0

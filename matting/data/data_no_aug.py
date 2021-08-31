@@ -60,12 +60,12 @@ class MatDataset(torch.utils.data.Dataset):
         return len(config.fine_tuning_img_list)
 
     def __getitem__(self, index):
-        image_path = self.fine_tuning_img_list[index]
-        alpha_path = self.fine_tuning_alpha_list[index]
+        image_path = config.fine_tuning_img_list[index]
+        alpha_path = config.fine_tuning_alpha_list[index]
         if random.random() < 0.5:
-            trimap_path = self.fine_tuning_trimap1_list[index]
+            trimap_path = config.fine_tuning_trimap1_list[index]
         else:
-            trimap_path = self.fine_tuning_trimap2_list[index]
+            trimap_path = config.fine_tuning_trimap2_list[index]
 
 
         img_info = [image_path, alpha_path, trimap_path]
@@ -76,6 +76,24 @@ class MatDataset(torch.utils.data.Dataset):
         trimap = cv2.imread(alpha_path, 0)
 
         img_info.append(img.shape)
+
+        h, w = img.shape[0], img.shape[1]
+        # pad to meet h % 64 ==0 and w % 64 == 0
+        theDivider = 64
+        if h % theDivider == 0:
+            pad_h = 0
+        else:
+            pad_h = theDivider - h % theDivider
+
+        if w % theDivider == 0:
+            pad_w = 0
+        else:
+            pad_w = theDivider - w % theDivider
+        img = np.pad(img, ((0, pad_h), (0, pad_w), (0,0)), mode = "reflect")
+        alpha = np.pad(alpha, ((0, pad_h), (0, pad_w), (0,0)), mode = "reflect")
+        trimap = np.pad(trimap, ((0, pad_h), (0, pad_w)), mode = "reflect")
+
+        h, w = img.shape[0], img.shape[1]
 
         if random.random() < 0.2:
             img = 255 - img
