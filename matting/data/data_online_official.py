@@ -162,7 +162,7 @@ class MatDataset(torch.utils.data.Dataset):
         self.logger.info("Matting Dataset foreground number: {}".format(self.cnt))
 
         self.random_rotation = random_rotation()
-        self.ColorJitter = transforms.ColorJitter(brightness = 0.0, contrast = 0.0, saturation = 0.0)
+        self.ColorJitter = transforms.ColorJitter(brightness = 0.2, contrast = 0.2, saturation = 0.2)
         self.ToTensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean = config.mean, std = config.std)
 
@@ -231,15 +231,15 @@ class MatDataset(torch.utils.data.Dataset):
             else:
                 alpha = gamma_aug(alpha, random.random() + 1.)
 
-        if random.random() < 0.2:
-            tmp = [random.random() * 255 for i in range(3)]
-            for i in range(3):
-                weight = random.random()
-                fg[:,:,i] = fg[:,:,i] * weight + tmp[i] * (1-weight)
+        #if random.random() < 0.2:
+        #    tmp = [random.random() * 255 for i in range(3)]
+        #    for i in range(3):
+        #        weight = random.random()
+        #        fg[:,:,i] = fg[:,:,i] * weight + tmp[i] * (1-weight)
 
-        if random.random() < 0.2:
+        if random.random() < 0.3:
             fg = 255 - fg
-        if random.random() < 0.2:
+        if random.random() < 0.3:
             fg = fg[:,:,np.random.permutation(3)]
 
         trimap_dict = original_trimap(alpha)
@@ -253,36 +253,36 @@ class MatDataset(torch.utils.data.Dataset):
 
         ###################################
         # blur
-        #if random.random() < 0.3:
-        #    t1 = random.randint(0,2)
-        #    t2 = random.randint(0,2)
-        #    fg = cv2.blur(fg, (2*t1 + 1, 2*t2+1))
-        #    alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
+        if random.random() < 0.3:
+            t1 = random.randint(1,3)
+            t2 = random.randint(1,3)
+            fg = cv2.blur(fg, (2*t1 + 1, 2*t2+1))
+            bg = cv2.blur(bg, (2*t1 + 1, 2*t2+1))
+        if random.random() < 0.3:
+            t1 = random.randint(1,3)
+            t2 = random.randint(1,3)
+            alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
         # sharpen
-        #if random.random() < 0.3:
-        #    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        #    fg = cv2.filter2D(fg, -1, kernel)
-        #    alpha = cv2.filter2D(alpha, -1, kernel)
+        if random.random() < 0.3:
+            kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+            fg = cv2.filter2D(fg, -1, kernel)
+            bg = cv2.filter2D(bg, -1, kernel)
         ##################################
+
+        # resize
+        if random.random() < 0.3:
+            h, w = fg.shape[0], fg.shape[1]
+            fg = cv2.resize(fg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            fg = cv2.resize(fg, (w, h), interpolation = cv2.INTER_CUBIC)
+            bg = cv2.resize(bg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            bg = cv2.resize(bg, (w, h), interpolation = cv2.INTER_CUBIC)
 
         fg_rgb = Image.fromarray(cv2.cvtColor(fg, cv2.COLOR_BGR2RGB))
-        #fg_rgb = self.ColorJitter(fg_rgb)
+        fg_rgb = self.ColorJitter(fg_rgb)
         fg_norm = self.ToTensor(fg_rgb)
 
-        ##################################
-        # blur
-        #if random.random() < 0.3:
-        #    t1 = random.randint(0,2)
-        #    t2 = random.randint(0,2)
-        #    bg = cv2.blur(bg, (2*t1 + 1, 2* t2 + 1))
-        # sharpen
-        #if random.random() < 0.3:
-        #    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        #    bg = cv2.filter2D(bg, -1, kernel)
-        ##################################
-
         bg_rgb = Image.fromarray(cv2.cvtColor(bg, cv2.COLOR_BGR2RGB))
-        #bg_rgb = self.ColorJitter(bg_rgb)
+        bg_rgb = self.ColorJitter(bg_rgb)
         bg_norm = self.ToTensor(bg_rgb)
 
         alpha = torch.from_numpy(alpha.astype(np.float32)[np.newaxis, :, :])

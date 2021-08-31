@@ -35,9 +35,10 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
+        hyper_stages = [5]
         self.A = {}
         self.B = {}
-        for i in range(1, 6):
+        for i in hyper_stages:
             self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
             self.A[ 'stage' + str(i) ].requires_grad = True
             self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
@@ -47,7 +48,7 @@ class test_time_model(nn.Module):
         self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
         self.laplacian_kernel[0,0,1,1] = -8
     def forward(self, x):
-        for i in range(1, 6):
+        for i in hyper_stages:
             nn.init.zeros_(self.A['stage'+str(i)])
             nn.init.zeros_(self.B['stage'+str(i)])
 
@@ -71,11 +72,11 @@ class test_time_model(nn.Module):
 
         with torch.enable_grad():
             skip_out_orig = {}
-            for i in range(1, 6):
+            for i in hyper_stages:
                 skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
 
             for the_step in range(5):
-                for i in range(1, 6):
+                for i in hyper_stages:
                     skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
 
                 decoder_out = self.decoder( skip_out )
@@ -85,7 +86,7 @@ class test_time_model(nn.Module):
                 print("haha loss ", the_step, ":", loss)
 
                 with torch.no_grad():
-                    for i in range(1, 6):
+                    for i in hyper_stages:
                         if self.A['stage'+str(i)].grad is not None:
                             self.A['stage'+str(i)].grad.detach().zero_()
                         if self.B['stage'+str(i)].grad is not None:
@@ -94,7 +95,7 @@ class test_time_model(nn.Module):
                 loss.backward()
 
                 with torch.no_grad():
-                    for i in range(1, 6):
+                    for i in hyper_stages:
                         self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - 1e-1)
                         self.B['stage'+str(i)].add_( self.B['stage'+str(i)].grad, alpha = - 1e-1)
 
