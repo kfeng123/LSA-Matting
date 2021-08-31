@@ -85,16 +85,18 @@ class test_time_model(nn.Module):
                 print("haha loss ", the_step, ":", loss)
 
                 with torch.no_grad():
-                    if self.a.grad is not None:
-                        self.a.grad.detach().zero_()
-                    if self.b.grad is not None:
-                        self.b.grad.detach().zero_()
+                    for i in range(1, 6):
+                        if self.A['stage'+str(i)].grad is not None:
+                            self.A['stage'+str(i)].grad.detach().zero_()
+                        if self.B['stage'+str(i)].grad is not None:
+                            self.B['stage'+str(i)].grad.detach().zero_()
 
                 loss.backward()
 
                 with torch.no_grad():
-                    self.a.add_( self.a.grad, alpha = - 1e-1)
-                    self.b.add_( self.b.grad, alpha = - 1e-1)
+                    for i in range(1, 6):
+                        self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - 1e-1)
+                        self.B['stage'+str(i)].add_( self.B['stage'+str(i)].grad, alpha = - 1e-1)
 
         out = {}
         out['alpha'] = decoder_out['alpha']
