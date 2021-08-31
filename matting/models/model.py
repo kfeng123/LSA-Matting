@@ -35,10 +35,14 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
-        self.a = torch.zeros([1, simple_model.skip.outChannels['stage5'], 1, 1]).cuda()
-        self.a.requires_grad = True
-        self.b = torch.zeros([1, simple_model.skip.outChannels['stage5'], 1, 1]).cuda()
-        self.b.requires_grad = True
+        self.A = {}
+        self.B = {}
+        for i in range(1, 6):
+            self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
+            self.A[ 'stage' + str(i) ].requires_grad = True
+            self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
+            self.B[ 'stage' + str(i) ].requires_grad = True
+
         # laplacian kernel
         self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
         self.laplacian_kernel[0,0,1,1] = -8
@@ -65,14 +69,19 @@ class test_time_model(nn.Module):
             skip_out = self.skip(x, encoder_out)
 
         with torch.enable_grad():
-            tmp_stage5 = skip_out['stage5']
+            skip_out_orig = {}
+            for i in range(1, 6):
+                skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
+
             for the_step in range(5):
-                skip_out['stage5'] = tmp_stage5 * torch.sigmoid(self.a) + self.b
+                for i in range(1, 6):
+                    skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
+
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
                 loss = (1 - decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number + \
                 (decoder_out['alpha'] * neg_edge_detach).sum() / neg_pixel_number
-                #print("haha loss ", the_step, ":", loss)
+                print("haha loss ", the_step, ":", loss)
 
                 with torch.no_grad():
                     if self.a.grad is not None:
