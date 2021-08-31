@@ -73,7 +73,7 @@ class MatDataset(torch.utils.data.Dataset):
         # read fg, alpha
         img = cv2.imread(image_path)[:, :, :3]
         alpha = cv2.imread(alpha_path, 0)
-        trimap = cv2.imread(alpha_path, 0)
+        trimap = cv2.imread(trimapa_path, 0)
 
         img_info.append(img.shape)
 
@@ -101,9 +101,9 @@ class MatDataset(torch.utils.data.Dataset):
             img = img[:,:,np.random.permutation(3)]
 
         ## debug
-        #cv2.imwrite("result/debug/debug_{}_fg.png".format(index),fg)
-        #cv2.imwrite("result/debug/debug_{}_bg.png".format(index),bg)
-        #cv2.imwrite("result/debug/debug_{}_trimap.png".format(index),trimap)
+        cv2.imwrite("result/debug/debug_{}_img.png".format(index), img)
+        cv2.imwrite("result/debug/debug_{}_alpha.png".format(index), alpha)
+        cv2.imwrite("result/debug/debug_{}_trimap.png".format(index), trimap)
 
         #########
 
