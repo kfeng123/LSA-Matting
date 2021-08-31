@@ -47,8 +47,9 @@ class test_time_model(nn.Module):
         self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
         self.laplacian_kernel[0,0,1,1] = -8
     def forward(self, x):
-        nn.init.zeros_(self.a)
-        nn.init.zeros_(self.b)
+        for i in range(1, 6):
+            nn.init.zeros_(self.A['stage'+str(i)])
+            nn.init.zeros_(self.B['stage'+str(i)])
 
         trimap_detach = x[:,3:4,:,:].detach()
         pos_detach = (trimap_detach > 0.75) * 1.
