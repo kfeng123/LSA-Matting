@@ -80,7 +80,7 @@ class test_time_model(nn.Module):
 
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
-                loss = (1 - decoder_out['alpha'] * pos_edge_detach).sum() / pos_pixel_number + \
+                loss = ((1 - decoder_out['alpha']) * pos_edge_detach).sum() / pos_pixel_number + \
                 (decoder_out['alpha'] * neg_edge_detach).sum() / neg_pixel_number
                 print("haha loss ", the_step, ":", loss)
 
