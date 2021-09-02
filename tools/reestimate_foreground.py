@@ -8,8 +8,8 @@ import cv2
 
 # reestimate the foreground using the method in ``A Closed-Form Solution to Natural Image Matting''
 def bad_estimate():
-    if not os.path.exists(config.new_fg_path):
-        os.makedirs(config.new_fg_path)
+    if not os.path.exists(config.bad_fg_path):
+        os.makedirs(config.bad_fg_path)
 
     for f in os.listdir(config.fg_path):
         if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
@@ -17,7 +17,10 @@ def bad_estimate():
             alpha = pymatting.load_image(os.path.join(config.alpha_path, f))
             foreground = pymatting.estimate_foreground_cf(alpha[:,:,np.newaxis]*img, alpha)
             foreground = alpha[:,:,np.newaxis]  * img + (1-alpha[:,:,np.newaxis]) * foreground
-            pymatting.save_image(os.path.join(config.new_fg_path, f), foreground)
+
+            assert(len(os.path.splitext(f)) == 2)
+            the_name = os.path.splitext(f)[0] + ".png"
+            pymatting.save_image(os.path.join(config.bad_fg_path, the_name), foreground)
 
 
 

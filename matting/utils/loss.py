@@ -81,7 +81,7 @@ def my_alpha_loss_multiscale(alpha, trimap_big, pred_mattes):
 
     loss_sum = torch.tensor(0).cuda()
     for i in range(5):
-        alpha_loss = torch.sqrt(diff ** 2 + 1e-6)
+        alpha_loss = torch.sqrt(diff ** 2 + 1e-4)
         alpha_loss_weighted = (alpha_loss * weighted).sum() / (weighted.sum() + 1.)
         loss_sum = loss_sum + alpha_loss_weighted / 2 ** i
         diff = F.avg_pool2d(diff, kernel_size = 2)
