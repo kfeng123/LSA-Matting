@@ -15,7 +15,7 @@ def bad_estimate():
         if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".jpeg") or f.endswith(".JPG"):
             img = pymatting.load_image(os.path.join(config.fg_path, f))
             alpha = pymatting.load_image(os.path.join(config.alpha_path, f))
-            foreground = pymatting.estimate_foreground_cf(alpha[:,:,np.newaxis]*img, alpha)
+            foreground = pymatting.estimate_foreground_cf(alpha[:,:,np.newaxis]*img, alpha, ichol_kwargs={"max_nnz":int(4e9)})
             foreground = alpha[:,:,np.newaxis]  * img + (1-alpha[:,:,np.newaxis]) * foreground
 
             assert(len(os.path.splitext(f)) == 2)
