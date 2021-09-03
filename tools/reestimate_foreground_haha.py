@@ -71,7 +71,7 @@ def my_refine_foreground(img, alpha, init_estimate):
             scaled_img = img
             scaled_alpha = alpha
         the_estimate = cv2.resize(the_estimate, (w // 2**scale, h // 2**scale), interpolation = cv2.INTER_LINEAR )
-        the_estimate = my_refine_foreground_iteration(scaled_img, scaled_alpha, the_estimate, 2**scale * 10)
+        the_estimate = my_refine_foreground_iteration(scaled_img, scaled_alpha, the_estimate, 2**scale * 20)
 
     the_estimate = (np.clip(the_estimate, 0, 1) * 255).astype(np.uint8)
     return the_estimate

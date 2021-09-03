@@ -256,14 +256,17 @@ class MatDataset(torch.utils.data.Dataset):
         if random.random() < 0.3:
             t1 = random.randint(1,3)
             t2 = random.randint(1,3)
-            fg = cv2.blur(fg, (2*t1 + 1, 2*t2+1))
-            bg = cv2.blur(bg, (2*t1 + 1, 2*t2+1))
+            fg = cv2.GaussianBlur(fg, (2*t1 + 1, 2*t2+1), 0)
+            bg = cv2.GaussianBlur(bg, (2*t1 + 1, 2*t2+1), 0)
         if random.random() < 0.3:
             t1 = random.randint(1,3)
             t2 = random.randint(1,3)
-            alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
+            if random.random() < 0.5:
+                alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
+            else:
+                alpha = cv2.GaussianBlur(alpha, (2*t1 + 1, 2*t2+1), 0)
         # sharpen
-        if random.random() < 0.3:
+        if random.random() < 0.0:
             kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
             fg = cv2.filter2D(fg, -1, kernel)
             bg = cv2.filter2D(bg, -1, kernel)
@@ -272,9 +275,15 @@ class MatDataset(torch.utils.data.Dataset):
         # resize
         if random.random() < 0.3:
             h, w = fg.shape[0], fg.shape[1]
-            fg = cv2.resize(fg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            if random.random() < 0.5:
+                fg = cv2.resize(fg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            else:
+                fg = cv2.resize(fg, (320, 320), interpolation = cv2.INTER_CUBIC)
             fg = cv2.resize(fg, (w, h), interpolation = cv2.INTER_CUBIC)
-            bg = cv2.resize(bg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            if random.random() < 0.5:
+                bg = cv2.resize(bg, (960, 960), interpolation = cv2.INTER_CUBIC)
+            else:
+                bg = cv2.resize(bg, (320, 320), interpolation = cv2.INTER_CUBIC)
             bg = cv2.resize(bg, (w, h), interpolation = cv2.INTER_CUBIC)
 
         fg_rgb = Image.fromarray(cv2.cvtColor(fg, cv2.COLOR_BGR2RGB))
