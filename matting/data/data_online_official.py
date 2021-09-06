@@ -231,7 +231,7 @@ class MatDataset(torch.utils.data.Dataset):
             else:
                 alpha = gamma_aug(alpha, random.random() + 1.)
 
-        #if random.random() < 0.2:
+        #if random.random() < 0.3:
         #    tmp = [random.random() * 255 for i in range(3)]
         #    for i in range(3):
         #        weight = random.random()
@@ -258,18 +258,18 @@ class MatDataset(torch.utils.data.Dataset):
             t2 = random.randint(1,3)
             fg = cv2.GaussianBlur(fg, (2*t1 + 1, 2*t2+1), 0)
             bg = cv2.GaussianBlur(bg, (2*t1 + 1, 2*t2+1), 0)
-        if random.random() < 0.3:
-            t1 = random.randint(1,3)
-            t2 = random.randint(1,3)
-            if random.random() < 0.5:
-                alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
-            else:
-                alpha = cv2.GaussianBlur(alpha, (2*t1 + 1, 2*t2+1), 0)
+        #if random.random() < 0.3:
+        #    t1 = random.randint(1,3)
+        #    t2 = random.randint(1,3)
+        #    if random.random() < 0.5:
+        #        alpha = cv2.blur(alpha, (2*t1 + 1, 2*t2+1))
+        #    else:
+        #        alpha = cv2.GaussianBlur(alpha, (2*t1 + 1, 2*t2+1), 0)
         # sharpen
-        if random.random() < 0.0:
-            kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-            fg = cv2.filter2D(fg, -1, kernel)
-            bg = cv2.filter2D(bg, -1, kernel)
+        #if random.random() < 0.0:
+        #    kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+        #    fg = cv2.filter2D(fg, -1, kernel)
+        #    bg = cv2.filter2D(bg, -1, kernel)
         ##################################
 
         # resize
