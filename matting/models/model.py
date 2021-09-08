@@ -78,7 +78,7 @@ class test_time_model(nn.Module):
                 skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
 
             original_alpha = self.decoder( skip_out )['alpha']
-            for the_step in range(10):
+            for the_step in range(50):
 
                 for i in self.hyper_stages:
                     skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
@@ -88,10 +88,11 @@ class test_time_model(nn.Module):
                 loss_edge = ((1 - decoder_out['alpha']) ** 2 * pos_edge_detach).sum() / pos_pixel_number + \
                 (decoder_out['alpha'] ** 2 * neg_edge_detach).sum() / neg_pixel_number
 
-                loss_preserve = torch.abs( decoder_out['alpha'] - original_alpha.detach() ).sum() / (h * w)
+                loss_preserve = (torch.abs( decoder_out['alpha'] - original_alpha.detach() ) * unknown_detach).sum() / unknown_detach.sum()
 
                 loss = loss_edge + loss_preserve
-                print("Step ", the_step, ":", "Total Loss", loss.item(), "Edge loss: ", loss_edge.item(), "Preservation loss: ", loss_preserve.item())
+                if the_step % 10 == 0:
+                    print("Step ", the_step, ":", "Total Loss", loss.item(), "Edge loss: ", loss_edge.item(), "Preservation loss: ", loss_preserve.item())
 
                 with torch.no_grad():
                     for i in self.hyper_stages:
