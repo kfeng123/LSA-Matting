@@ -48,8 +48,6 @@ class test_time_model(nn.Module):
         self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
         self.laplacian_kernel[0,0,1,1] = -8
     def forward(self, x):
-        _, _, h, w = x.shape
-
         for i in self.hyper_stages:
             nn.init.zeros_(self.A['stage'+str(i)])
             nn.init.zeros_(self.B['stage'+str(i)])
@@ -77,21 +75,17 @@ class test_time_model(nn.Module):
             for i in self.hyper_stages:
                 skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
 
-            original_alpha = self.decoder( skip_out )['alpha']
             for the_step in range(10):
-
                 for i in self.hyper_stages:
                     skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
 
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
-                loss_edge = ((1 - decoder_out['alpha']) ** 2 * pos_edge_detach).sum() / pos_pixel_number + \
-                (decoder_out['alpha'] ** 2 * neg_edge_detach).sum() / neg_pixel_number
+                loss = ((1 - decoder_out['alpha']) * pos_edge_detach).sum() / pos_pixel_number + \
+                (decoder_out['alpha'] * neg_edge_detach).sum() / neg_pixel_number
+                print("loss 1 ", the_step, ":", loss)
 
-                loss_preserve = torch.abs( decoder_out['alpha'] - original_alpha ) / (h * w)
 
-                print("Step ", the_step, ":", loss, "Edge loss: ", loss_edge, "Preservation loss: ", loss_preserve)
-                loss = loss_edge + loss_preserve
 
                 with torch.no_grad():
                     for i in self.hyper_stages:
@@ -99,13 +93,13 @@ class test_time_model(nn.Module):
                             self.A['stage'+str(i)].grad.detach().zero_()
                         if self.B['stage'+str(i)].grad is not None:
                             self.B['stage'+str(i)].grad.detach().zero_()
+
                 loss.backward()
 
-                lr = 1e-1
                 with torch.no_grad():
                     for i in self.hyper_stages:
-                        self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - lr)
-                        self.B['stage'+str(i)].add_( self.B['stage'+str(i)].grad, alpha = - lr)
+                        self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - 1e-1)
+                        self.B['stage'+str(i)].add_( self.B['stage'+str(i)].grad, alpha = - 1e-1)
 
         out = {}
         out['alpha'] = decoder_out['alpha']
