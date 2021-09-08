@@ -79,7 +79,7 @@ class decoderModule(nn.Module):
         self.final_final = nn.Sequential(
                 OrderedDict([
                     ("relu1", nn.ReLU(inplace=True)),
-                    ("conv1", nn.Conv2d(32, 32, 3, 1, 1)),
+                    ("conv1", nn.Conv2d(64, 32, 3, 1, 1)),
                     ("relu2", nn.ReLU(inplace=True)),
                     ("conv2", nn.Conv2d(32, 32, 3, 1, 1)),
                     ("relu3", nn.ReLU(inplace=True)),
