@@ -75,7 +75,7 @@ class test_time_model(nn.Module):
             for i in self.hyper_stages:
                 skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
 
-            for the_step in range(5):
+            for the_step in range(10):
                 for i in self.hyper_stages:
                     skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
 
