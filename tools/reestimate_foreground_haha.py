@@ -22,7 +22,6 @@ def bad_estimate():
             the_name = os.path.splitext(f)[0] + ".png"
             pymatting.save_image(os.path.join(config.bad_fg_path, the_name), foreground)
 
-
 def my_refine_foreground_iteration(img, alpha, init_estimate, iter_num):
     h, w = alpha.shape
     alpha_pad = np.pad(alpha, ((1,1), (1,1)), 'reflect')

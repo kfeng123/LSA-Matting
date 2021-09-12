@@ -60,12 +60,12 @@ class test_time_model(nn.Module):
         unknown_detach = 1 - pos_detach - neg_detach
         pos_edge_detach = F.conv2d(pos_detach, self.laplacian_kernel, padding = 1)
         pos_edge_detach = torch.abs(pos_edge_detach)
-        pos_edge_detach = pos_edge_detach * unknown_detach
+        pos_edge_detach = (pos_edge_detach > 0) * unknown_detach
         pos_pixel_number = pos_edge_detach.sum() + 0.1
 
         neg_edge_detach = F.conv2d(neg_detach, self.laplacian_kernel, padding = 1)
         neg_edge_detach = torch.abs(neg_edge_detach)
-        neg_edge_detach = neg_edge_detach * unknown_detach
+        neg_edge_detach = (neg_edge_detach > 0) * unknown_detach
         neg_pixel_number = neg_edge_detach.sum() + 0.1
 
         with torch.no_grad():
@@ -90,7 +90,7 @@ class test_time_model(nn.Module):
 
                 loss_preserve = (torch.abs( decoder_out['alpha'] - original_alpha.detach() ) * unknown_detach).sum() / unknown_detach.sum()
 
-                loss = loss_edge + loss_preserve
+                loss = loss_edge + 0.5 * loss_preserve
                 if the_step % 10 == 0:
                     print("Step ", the_step, ":", "Total Loss", loss.item(), "Edge loss: ", loss_edge.item(), "Preservation loss: ", loss_preserve.item())
 
@@ -102,7 +102,7 @@ class test_time_model(nn.Module):
                             self.B['stage'+str(i)].grad.detach().zero_()
                 loss.backward()
 
-                lr = 1e-1
+                lr = 10
                 with torch.no_grad():
                     for i in self.hyper_stages:
                         self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - lr)
