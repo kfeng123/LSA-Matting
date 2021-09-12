@@ -194,19 +194,37 @@ def inference_rotation_permute(model, img, trimap):
     h, w, c = img.shape
     all_preds = []
 
-    tmp = inference_rotation(model, scale_img, scale_trimap)
+    tmp = inference_rotation(model, img, trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, img[:,:,[0,2,1]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, img[:,:,[1,0,2]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, img[:,:,[1,2,0]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, img[:,:,[2,0,1]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, img[:,:,[2,1,0]], trimap)
     all_preds.append(tmp)
 
-    tmp = inference_rotation(model, 255 - scale_img, scale_trimap)
+    tmp = inference_rotation(model, 255 - img, trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, 255 - img[:,:,[0,2,1]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, 255 - img[:,:,[1,0,2]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, 255 - img[:,:,[1,2,0]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, 255 - img[:,:,[2,0,1]], trimap)
+    all_preds.append(tmp)
+    tmp = inference_rotation(model, 255 - img[:,:,[2,1,0]], trimap)
     all_preds.append(tmp)
 
-    tmp = inference_rotation(model, scale_img[:,:,[2,1,0]], scale_trimap)
-    all_preds.append(tmp)
 
     final_matte = np.zeros(all_preds[0].shape)
     for matte in all_preds:
         final_matte = final_matte + matte
-    pred_mattes = final_matte / 3
+    pred_mattes = final_matte / 12
     return pred_mattes
 
 
