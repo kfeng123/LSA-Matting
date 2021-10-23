@@ -78,7 +78,6 @@ class decoderModule(nn.Module):
         self.final_fusion = FAM_module(left_channels = image_channel, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
         self.final_final = nn.Sequential(
                 OrderedDict([
-                    ("relu1", nn.ReLU(inplace=True)),
                     ("conv1", nn.Conv2d(32, 32, 3, 1, 1)),
                     ("relu2", nn.ReLU(inplace=True)),
                     ("conv2", nn.Conv2d(32, 32, 3, 1, 1)),
