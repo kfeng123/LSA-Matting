@@ -23,36 +23,6 @@ class my_conv(nn.Module):
         w = self.fc(w)
         return fea * ( F.relu6(w + 3.0, inplace = True) / 6.0 )
 
-class FAM_module(nn.Module):
-    def __init__(self, left_channels, down_channels, m_channels, out_channels):
-        super(FAM_module, self).__init__()
-        self.left_conv = nn.Conv2d(left_channels, m_channels, 1, bias=False)
-        self.down_conv = nn.Conv2d(down_channels, m_channels, 1, bias=False)
-        self.flow_make = nn.Conv2d(2 * m_channels, 2, kernel_size = 3, padding=1, bias=False)
-        self.final_conv = nn.Conv2d(2 * m_channels, out_channels, kernel_size = 3, padding=1)
-
-    def forward(self, left_feature, down_feature):
-        down_feature = self.down_conv(down_feature)
-        left_feature = self.left_conv(left_feature)
-        left_shape = left_feature.shape[2], left_feature.shape[3]
-        down_feature_upsampled = F.interpolate(down_feature, size = left_shape, mode="bilinear")
-        flow = self.flow_make(torch.cat([down_feature_upsampled, left_feature], 1))
-        feature = self.flow_warp(down_feature, flow, size = left_shape)
-        feature = torch.cat([feature, left_feature], 1)
-        return self.final_conv(feature)
-
-    def flow_warp(self, input, flow, size):
-        out_h, out_w = size
-        n, c, h, w = input.size()
-        norm = torch.tensor([[[[out_w, out_h]]]]).type_as(input).to(input.device)
-        h = torch.linspace(-1.0, 1.0, out_h).view(out_h, 1).repeat(1, out_w)
-        w = torch.linspace(-1.0, 1.0, out_w).view(1, out_w).repeat(out_h, 1)
-        grid = torch.cat((w.unsqueeze(2), h.unsqueeze(2)), 2)
-        grid = grid.repeat(n, 1, 1, 1).type_as(input).to(input.device)
-        grid = grid + flow.permute(0, 2, 3, 1) / norm
-        output = F.grid_sample(input, grid)
-        return output
-
 class decoderModule(nn.Module):
     def __init__(self, inChannels, lastStage = 4, image_channel = 4):
         super(decoderModule, self).__init__()
@@ -75,10 +45,8 @@ class decoderModule(nn.Module):
             self.add_module("decoder_"+str(i),
                             my_conv(self.inChannels['stage'+str(i)], self.outChannels['stage'+str(i)])
                     )
-        self.final_fusion = FAM_module(left_channels = image_channel, down_channels = self.outChannels['stage1'], m_channels = 32, out_channels = 32)
         self.final_final = nn.Sequential(
                 OrderedDict([
-                    ("relu1", nn.ReLU(inplace=True)),
                     ("conv1", nn.Conv2d(68, 32, 3, 1, 1)),
                     ("relu2", nn.ReLU(inplace=True)),
                     ("conv2", nn.Conv2d(32, 32, 3, 1, 1)),
@@ -126,10 +94,8 @@ class decoderModule(nn.Module):
         tmp = self.decoder_1(tmp)
         tmp = F.interpolate(tmp, features['stage0'].shape[2:], mode = "bilinear")
         tmp = torch.cat([features['stage0'], tmp], 1)
-        #alpha = self.final_fusion(features['stage0'], tmp)
         alpha = self.final_final(tmp)
         out['alpha'] = alpha
-
 
         return out
 

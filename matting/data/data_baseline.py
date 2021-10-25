@@ -231,7 +231,7 @@ class MatDataset(torch.utils.data.Dataset):
             else:
                 alpha = gamma_aug(alpha, random.random() + 1.)
 
-        #if random.random() < 0.2:
+        #if random.random() < 0.3:
         #    tmp = [random.random() * 255 for i in range(3)]
         #    for i in range(3):
         #        weight = random.random()
@@ -269,14 +269,6 @@ class MatDataset(torch.utils.data.Dataset):
             bg = cv2.filter2D(bg, -1, kernel)
         ##################################
 
-        # resize
-        if random.random() < 0.0:
-            h, w = fg.shape[0], fg.shape[1]
-            fg = cv2.resize(fg, (960, 960), interpolation = cv2.INTER_CUBIC)
-            fg = cv2.resize(fg, (w, h), interpolation = cv2.INTER_CUBIC)
-            bg = cv2.resize(bg, (960, 960), interpolation = cv2.INTER_CUBIC)
-            bg = cv2.resize(bg, (w, h), interpolation = cv2.INTER_CUBIC)
-
         fg_rgb = Image.fromarray(cv2.cvtColor(fg, cv2.COLOR_BGR2RGB))
         #fg_rgb = self.ColorJitter(fg_rgb)
         fg_norm = self.ToTensor(fg_rgb)
@@ -290,7 +282,6 @@ class MatDataset(torch.utils.data.Dataset):
 
         fg_norm = self.normalize(fg_norm)
         bg_norm = self.normalize(bg_norm)
-
 
         return fg_norm, bg_norm, alpha, trimap, img_info
 
