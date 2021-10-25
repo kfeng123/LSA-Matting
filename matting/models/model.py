@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from ..utils import config
 from .backbone.mmclassification.resnet import ResNetV1d
 from .skip.skip import skipModule_simple
-from .decoder.decoder_FAM import  decoderModule
+from .decoder.decoder_simple import  decoderModule
 
 class theModel(nn.Module):
     def __init__(self):

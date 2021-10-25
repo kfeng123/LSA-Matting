@@ -15,7 +15,8 @@ import logging
 import random
 
 import matting.utils.config as config
-from matting.data.data_online_official import MatDataset
+#from matting.data.data_online_official import MatDataset
+from matting.data.data_baseline import MatDataset
 from matting.models.model import theModel
 from matting.utils.loss import *
 from matting.utils.utils import get_logger
