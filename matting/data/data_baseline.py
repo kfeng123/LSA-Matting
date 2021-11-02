@@ -231,11 +231,11 @@ class MatDataset(torch.utils.data.Dataset):
             else:
                 alpha = gamma_aug(alpha, random.random() + 1.)
 
-        #if random.random() < 0.3:
-        #    tmp = [random.random() * 255 for i in range(3)]
-        #    for i in range(3):
-        #        weight = random.random()
-        #        fg[:,:,i] = fg[:,:,i] * weight + tmp[i] * (1-weight)
+        if random.random() < 0.3:
+            tmp = [random.random() * 255 for i in range(3)]
+            for i in range(3):
+                weight = random.random()
+                fg[:,:,i] = fg[:,:,i] * weight + tmp[i] * (1-weight)
 
         if random.random() < 0.3:
             fg = 255 - fg

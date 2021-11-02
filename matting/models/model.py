@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from ..utils import config
 from .backbone.mmclassification.resnet import ResNetV1d
-from .skip.skip import skipModule_simple
+from .skip.skip_aspp import skipModule_simple
 from .decoder.decoder_simple import  decoderModule
 
 class theModel(nn.Module):
@@ -14,7 +14,7 @@ class theModel(nn.Module):
         self.lastStage = 5
         image_channel = 4
         self.backbone = ResNetV1d(in_channels = image_channel, depth = 50)
-        self.skip = skipModule_simple(self.backbone._out_feature_channels, lastStage = 5, image_channel = image_channel, ifPPM = False)
+        self.skip = skipModule_simple(self.backbone._out_feature_channels, image_channel = image_channel, ifASPP = True)
         self.decoder = decoderModule(self.skip.outChannels, lastStage = 5, image_channel = image_channel)
 
     def forward(self, x):
