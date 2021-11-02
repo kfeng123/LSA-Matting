@@ -35,13 +35,13 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
-        self.hyper_stages = [5]
+        self.hyper_stages = [5, 4, 3, 2, 1]
         self.A = {}
         self.B = {}
         for i in self.hyper_stages:
-            self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
+            self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 64, 64]).cuda()
             self.A[ 'stage' + str(i) ].requires_grad = True
-            self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 1, 1]).cuda()
+            self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 64, 64]).cuda()
             self.B[ 'stage' + str(i) ].requires_grad = True
 
         # laplacian kernel
@@ -78,10 +78,13 @@ class test_time_model(nn.Module):
                 skip_out_orig['stage' + str(i)] =skip_out['stage' + str(i)]
 
             original_alpha = self.decoder( skip_out )['alpha']
-            for the_step in range(50):
+            for the_step in range(100):
 
                 for i in self.hyper_stages:
-                    skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(self.A['stage'+str(i)]) * 2 + self.B['stage'+str(i)]
+                    A = F.interpolate(self.A['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
+                    #skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(A) * 2 + B
+                    skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.exp(A) + B
 
                 decoder_out = self.decoder( skip_out )
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
