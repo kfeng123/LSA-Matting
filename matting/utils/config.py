@@ -34,7 +34,7 @@ fine_tuning_trimap2_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_
 
 # train
 batchSize = 16
-threads = 20
+threads = 8
 saveDir = "model"
 printFreq = 20
 ckptSaveFreq = 10
