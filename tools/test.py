@@ -93,7 +93,7 @@ def test(args, model, logger, saveImg = False):
         origin_pred_mattes = np.clip(origin_pred_mattes, 0, 1)
 
         # origin trimap
-        pixel = float((trimap == 128).sum())
+        #pixel = float((trimap == 128).sum())
 
         # eval if gt alpha is given
         if config.test_alpha_path != '':
