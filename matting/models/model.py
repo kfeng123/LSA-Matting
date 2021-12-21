@@ -35,14 +35,38 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
-        self.hyper_stages = [5, 4, 3, 2, 1]
+        self.hyper_stages = [4]
         self.A = {}
         self.B = {}
+        #for i in self.hyper_stages:
+        #    self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 16, 16]).cuda()
+        #    self.A[ 'stage' + str(i) ].requires_grad = True
+        #    self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 16, 16]).cuda()
+        #    self.B[ 'stage' + str(i) ].requires_grad = True
+
+        self.the_channels = {
+                'stage0': 1,
+                'stage1': 64,
+                'stage2': 64,
+                'stage3': 128,
+                'stage4': 256,
+                'stage5': 512,
+                }
+        
         for i in self.hyper_stages:
-            self.A[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 64, 64]).cuda()
+            self.A[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 16, 16]).cuda()
             self.A[ 'stage' + str(i) ].requires_grad = True
-            self.B[ 'stage' + str(i) ] = torch.zeros([1, simple_model.skip.outChannels[ 'stage' + str(i) ], 64, 64]).cuda()
+            self.B[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 16, 16]).cuda()
             self.B[ 'stage' + str(i) ].requires_grad = True
+        #self.A[ 'stage4'] = torch.zeros([1, 256, 16, 16]).cuda()
+        #self.A[ 'stage4'].requires_grad = True
+        #self.B[ 'stage4'] = torch.zeros([1, 256, 16, 16]).cuda()
+        #self.B[ 'stage4'].requires_grad = True
+
+        #self.A[ 'stage3'] = torch.zeros([1, 128, 16, 16]).cuda()
+        #self.A[ 'stage3'].requires_grad = True
+        #self.B[ 'stage3'] = torch.zeros([1, 128, 16, 16]).cuda()
+        #self.B[ 'stage3'].requires_grad = True
 
         # laplacian kernel
         self.laplacian_kernel = torch.ones((1,1,3,3), requires_grad = False).cuda()
@@ -80,20 +104,67 @@ class test_time_model(nn.Module):
             original_alpha = self.decoder( skip_out )['alpha']
             for the_step in range(100):
 
-                for i in self.hyper_stages:
-                    A = F.interpolate(self.A['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
-                    B = F.interpolate(self.B['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
-                    #skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(A) * 2 + B
-                    skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.exp(A) + B
+                #for i in self.hyper_stages:
+                #    A = F.interpolate(self.A['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
+                #    B = F.interpolate(self.B['stage'+str(i)], skip_out_orig['stage'+str(i)].shape[2:], mode = "bicubic")
+                #    #skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.sigmoid(A) * 2 + B
+                #    skip_out['stage'+str(i)] = skip_out_orig['stage'+str(i)] * torch.exp(A) + B
 
-                decoder_out = self.decoder( skip_out )
+                #decoder_out = self.decoder( skip_out )
+
+                # stage 5 to stage 4
+                tmp = self.decoder.decoder_5(skip_out['stage5'])
+                if 5 in self.hyper_stages:
+                    A = F.interpolate(self.A['stage5'], skip_out['stage5'].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage5'], skip_out['stage5'].shape[2:], mode = "bicubic")
+                    tmp = tmp * torch.exp(A) + B
+
+                tmp = F.interpolate(tmp, skip_out['stage4'].shape[2:], mode = "nearest")
+                tmp = torch.cat([skip_out['stage4'], tmp], 1)
+                # stage 4 to stage 3
+                tmp = self.decoder.decoder_4(tmp)
+                if 4 in self.hyper_stages:
+                    A = F.interpolate(self.A['stage4'], skip_out['stage4'].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage4'], skip_out['stage4'].shape[2:], mode = "bicubic")
+                    tmp = tmp * torch.exp(A) + B
+                    print(A.max(), B.max())
+                tmp = F.interpolate(tmp, skip_out['stage3'].shape[2:], mode = "nearest")
+                tmp = torch.cat([skip_out['stage3'], tmp], 1)
+                # stage 3 to stage 2
+                tmp = self.decoder.decoder_3(tmp)
+                if 3 in self.hyper_stages:
+                    A = F.interpolate(self.A['stage3'], skip_out['stage3'].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage3'], skip_out['stage3'].shape[2:], mode = "bicubic")
+                    tmp = tmp * torch.exp(A) + B
+                tmp = F.interpolate(tmp, skip_out['stage2'].shape[2:], mode = "nearest")
+                tmp = torch.cat([skip_out['stage2'], tmp], 1)
+                # stage 2 to stage 1
+                tmp = self.decoder.decoder_2(tmp)
+                if 2 in self.hyper_stages:
+                    A = F.interpolate(self.A['stage2'], skip_out['stage2'].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage2'], skip_out['stage2'].shape[2:], mode = "bicubic")
+                    tmp = tmp * torch.exp(A) + B
+                tmp = F.interpolate(tmp, skip_out['stage1'].shape[2:], mode = "nearest")
+                tmp = torch.cat([skip_out['stage1'], tmp], 1)
+
+                tmp = self.decoder.decoder_1(tmp)
+                if 1 in self.hyper_stages:
+                    A = F.interpolate(self.A['stage1'], skip_out['stage1'].shape[2:], mode = "bicubic")
+                    B = F.interpolate(self.B['stage1'], skip_out['stage1'].shape[2:], mode = "bicubic")
+                    tmp = tmp * torch.exp(A) + B
+                tmp = F.interpolate(tmp, skip_out['stage0'].shape[2:], mode = "bilinear")
+                tmp = torch.cat([skip_out['stage0'], tmp], 1)
+                decoder_out = {}
+                decoder_out['alpha'] = self.decoder.final_final(tmp)
+
                 decoder_out['alpha'] = torch.clamp(decoder_out['alpha'], 0, 1)
-                loss_edge = ((1 - decoder_out['alpha']) ** 2 * pos_edge_detach).sum() / pos_pixel_number + \
-                (decoder_out['alpha'] ** 2 * neg_edge_detach).sum() / neg_pixel_number
+                #loss_edge = ((1 - decoder_out['alpha']) ** 2 * pos_edge_detach).sum() / pos_pixel_number + \
+                #(decoder_out['alpha'] ** 2 * neg_edge_detach).sum() / neg_pixel_number
+                loss_edge = ( ((1 - decoder_out['alpha']) ** 2 * pos_edge_detach).sum() + (decoder_out['alpha'] ** 2 * neg_edge_detach).sum() ) / (pos_pixel_number + neg_pixel_number)
 
                 loss_preserve = (torch.abs( decoder_out['alpha'] - original_alpha.detach() ) * unknown_detach).sum() / unknown_detach.sum()
 
-                loss = loss_edge + 0.5 * loss_preserve
+                loss = loss_edge + 0.1 * loss_preserve ** 2
                 if the_step % 10 == 0:
                     print("Step ", the_step, ":", "Total Loss", loss.item(), "Edge loss: ", loss_edge.item(), "Preservation loss: ", loss_preserve.item())
 
@@ -105,7 +176,7 @@ class test_time_model(nn.Module):
                             self.B['stage'+str(i)].grad.detach().zero_()
                 loss.backward()
 
-                lr = 10
+                lr = 50
                 with torch.no_grad():
                     for i in self.hyper_stages:
                         self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - lr)
