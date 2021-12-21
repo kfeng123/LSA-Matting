@@ -52,7 +52,7 @@ class test_time_model(nn.Module):
                 'stage4': 256,
                 'stage5': 512,
                 }
-        
+
         for i in self.hyper_stages:
             self.A[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 16, 16]).cuda()
             self.A[ 'stage' + str(i) ].requires_grad = True
@@ -127,7 +127,6 @@ class test_time_model(nn.Module):
                     A = F.interpolate(self.A['stage4'], skip_out['stage4'].shape[2:], mode = "bicubic")
                     B = F.interpolate(self.B['stage4'], skip_out['stage4'].shape[2:], mode = "bicubic")
                     tmp = tmp * torch.exp(A) + B
-                    print(A.max(), B.max())
                 tmp = F.interpolate(tmp, skip_out['stage3'].shape[2:], mode = "nearest")
                 tmp = torch.cat([skip_out['stage3'], tmp], 1)
                 # stage 3 to stage 2
