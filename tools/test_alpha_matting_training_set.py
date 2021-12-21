@@ -14,6 +14,7 @@ import matting.utils.config as config
 from matting.utils.utils import get_logger
 from matting.models.model import theModel, test_time_model
 from matting.inference import inference_rotation_multiscale, inference_aug
+from matting.utils.eval_loss import eval_mse, eval_sad, eval_gradient_loss, eval_connectivity_loss
 
 def get_args():
     parser = argparse.ArgumentParser(description='DeepImageMatting')
@@ -75,7 +76,7 @@ def test(model, test_img_path, test_trimap_path, test_alpha_path, output_path):
         mse_diffs += mse_diff;
         sad_diffs += sad_diff;
         grad_diffs += grad_diff;
-        connenct_diffs += connenct_diff;
+        connect_diffs += connect_diff;
 
         origin_pred_mattes = (origin_pred_mattes * 255).astype(np.uint8)
 
