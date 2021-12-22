@@ -35,7 +35,7 @@ class test_time_model(nn.Module):
         self.skip = simple_model.skip
         self.decoder = simple_model.decoder
         # hyperparameter to be optimized
-        self.hyper_stages = [4]
+        self.hyper_stages = [2, 3, 4, 5]
         self.A = {}
         self.B = {}
         #for i in self.hyper_stages:
@@ -52,11 +52,11 @@ class test_time_model(nn.Module):
                 'stage4': 256,
                 'stage5': 512,
                 }
-
+        
         for i in self.hyper_stages:
-            self.A[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 16, 16]).cuda()
+            self.A[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 2 ** (8 - i), 2 ** (8 - i)]).cuda()
             self.A[ 'stage' + str(i) ].requires_grad = True
-            self.B[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 16, 16]).cuda()
+            self.B[ 'stage' + str(i) ] = torch.zeros([1, self.the_channels[ 'stage' + str(i) ], 2 ** (8 - i), 2 ** (8 - i)]).cuda()
             self.B[ 'stage' + str(i) ].requires_grad = True
         #self.A[ 'stage4'] = torch.zeros([1, 256, 16, 16]).cuda()
         #self.A[ 'stage4'].requires_grad = True
@@ -175,7 +175,7 @@ class test_time_model(nn.Module):
                             self.B['stage'+str(i)].grad.detach().zero_()
                 loss.backward()
 
-                lr = 50
+                lr = 20
                 with torch.no_grad():
                     for i in self.hyper_stages:
                         self.A['stage'+str(i)].add_( self.A['stage'+str(i)].grad, alpha = - lr)
