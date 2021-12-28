@@ -1,5 +1,5 @@
 # IMPROVING DEEP IMAGE MATTING VIA LOCAL SMOOTHNESS ASSUMPTION
-This is the official repository of [**IMPROVING DEEP IMAGE MATTING VIA LOCAL SMOOTHNESS ASSUMPTION**](https://arxiv.org/).
+This is the official repository of [**IMPROVING DEEP IMAGE MATTING VIA LOCAL SMOOTHNESS ASSUMPTION**](https://arxiv.org/abs/2112.13809).
 
 This repo includes all source codes (including data preprocessing code, training code and testing code). 
 Have fun!
