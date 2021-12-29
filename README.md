@@ -1,3 +1,5 @@
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/improving-deep-image-matting-via-local/image-matting-on-composition-1k-1)](https://paperswithcode.com/sota/image-matting-on-composition-1k-1?p=improving-deep-image-matting-via-local)
+
 # IMPROVING DEEP IMAGE MATTING VIA LOCAL SMOOTHNESS ASSUMPTION
 This is the official repository of [**IMPROVING DEEP IMAGE MATTING VIA LOCAL SMOOTHNESS ASSUMPTION**](https://arxiv.org/abs/2112.13809).
 This repo includes all source codes (including data preprocessing code, training code and testing code). 
