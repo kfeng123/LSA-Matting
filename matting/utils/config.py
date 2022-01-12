@@ -14,10 +14,10 @@ new_fg_path = os.path.join(train_path_base, "kappa_fg")
 bg_path = os.path.join(train_path_base, "coco_bg")
 alpha_path = os.path.join(train_path_base, "alpha")
 
-fg_list = open(os.path.join(train_path_base, "training_fg_names.txt")).readlines()
-fg_list = [name.strip() for name in fg_list]
-bg_list = open(os.path.join(train_path_base, "training_bg_names.txt")).readlines()
-bg_list = [name.strip() for name in bg_list]
+#fg_list = open(os.path.join(train_path_base, "training_fg_names.txt")).readlines()
+#fg_list = [name.strip() for name in fg_list]
+#bg_list = open(os.path.join(train_path_base, "training_bg_names.txt")).readlines()
+#bg_list = [name.strip() for name in bg_list]
 
 # test data
 test_path_base = "/sda/WangRui/dataSets/Combined_Dataset/my_clean/test"
@@ -26,11 +26,11 @@ test_trimap_path = os.path.join(test_path_base, "trimaps")
 test_alpha_path = os.path.join(test_path_base, "alpha_copy")
 
 # fine-tuning data (training data of alphamatting.com)
-fine_tuning_names = ["GT" + str(i).zfill(2) + ".png" for i in range(1,28)]
-fine_tuning_img_list =[os.path.join("/sda/WangRui/alphamatting_train/input_training_lowres", name) for name in fine_tuning_names]
-fine_tuning_alpha_list =[os.path.join("/sda/WangRui/alphamatting_train/gt_training_lowres", name) for name in fine_tuning_names]
-fine_tuning_trimap1_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap1", name) for name in fine_tuning_names]
-fine_tuning_trimap2_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap2", name) for name in fine_tuning_names]
+#fine_tuning_names = ["GT" + str(i).zfill(2) + ".png" for i in range(1,28)]
+#fine_tuning_img_list =[os.path.join("/sda/WangRui/alphamatting_train/input_training_lowres", name) for name in fine_tuning_names]
+#fine_tuning_alpha_list =[os.path.join("/sda/WangRui/alphamatting_train/gt_training_lowres", name) for name in fine_tuning_names]
+#fine_tuning_trimap1_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap1", name) for name in fine_tuning_names]
+#fine_tuning_trimap2_list =[os.path.join("/sda/WangRui/alphamatting_train/trimap_training_lowres/Trimap2", name) for name in fine_tuning_names]
 
 # train
 batchSize = 16
